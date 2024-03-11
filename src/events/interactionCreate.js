@@ -42,15 +42,5 @@ module.exports = {
             }
         }
 
-        if (interaction.isButton()) {
-            console.log('test button click')
-            // get the button's ID
-            const buttonPress = client.buttons.get(interaction.customId);
-            console.log(buttonPress)
-
-            // run the code- this can be done however you want- I chose to do it this way.
-            await buttonPress.execute(interaction);
-        }
-
     },
 };
