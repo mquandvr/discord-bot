@@ -26,6 +26,14 @@ var app = express();
 //app.use(express.static(__dirname)); // Current directory is root
 app.use('/media', express.static(__dirname + '/assets'));
 
+app.use('/healthz', (req, res) => {
+    res.sendStatus(200).json("healthz");;
+});
+
+app.use('/', (req, res) => {
+    res.sendStatus(200).json("hello world");;
+});
+
 //app.use(express.static('/assets'));
 
 app.listen(80);
