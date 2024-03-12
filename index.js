@@ -6,19 +6,6 @@ client.commands = new Collection();
 
 require('dotenv').config();
 
-const functions = fs.readdirSync("./src/functions").filter(file => file.endsWith(".js"));
-const eventFiles = fs.readdirSync("./src/events").filter(file => file.endsWith(".js"));
-const commandFolders = fs.readdirSync("./src/commands");
-
-(async () => {
-    for (file of functions) {
-        require(`./src/functions/${file}`)(client);
-    }
-    client.handleEvents(eventFiles, "./src/events");
-    client.handleCommands(commandFolders, "./src/commands");
-    client.login(process.env.token)
-})();
-
 var express = require('express');
 var app = express();
 //var path = require('path');
@@ -38,3 +25,16 @@ app.use('/', (req, res) => {
 
 app.listen(80);
 console.log('Listening on port 80');
+
+const functions = fs.readdirSync("./src/functions").filter(file => file.endsWith(".js"));
+const eventFiles = fs.readdirSync("./src/events").filter(file => file.endsWith(".js"));
+const commandFolders = fs.readdirSync("./src/commands");
+
+(async () => {
+    for (file of functions) {
+        require(`./src/functions/${file}`)(client);
+    }
+    client.handleEvents(eventFiles, "./src/events");
+    client.handleCommands(commandFolders, "./src/commands");
+    client.login(process.env.token)
+})();
