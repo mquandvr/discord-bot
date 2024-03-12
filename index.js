@@ -30,11 +30,11 @@ const functions = fs.readdirSync("./src/functions").filter(file => file.endsWith
 const eventFiles = fs.readdirSync("./src/events").filter(file => file.endsWith(".js"));
 const commandFolders = fs.readdirSync("./src/commands");
 
-(async () => {
+setTimeout(async () => {
     for (file of functions) {
         require(`./src/functions/${file}`)(client);
     }
     client.handleEvents(eventFiles, "./src/events");
     client.handleCommands(commandFolders, "./src/commands");
-    client.login(process.env.token)
-})();
+    await client.login(process.env.token)
+}, 3000);
