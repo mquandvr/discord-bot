@@ -76,7 +76,7 @@ const execute = async (interaction, client) => {
     //await interaction.reply({ ephemeral: true, content: 'Loading...!' });
     //await channel.send({ embeds: embed, files: file });
     //await interaction.deleteReply();
-    const response = await interaction.reply({ ephemeral: true, embeds: equipEmbedArr, components: [row], fetchReply: true });
+    const response = await interaction.reply({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
     //const collectorFilter = i => i.user.id === interaction.user.id;
 
     const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
@@ -86,9 +86,9 @@ const execute = async (interaction, client) => {
             const collectorFilter = i => i.user.id === interaction.user.id;
             if (collectorFilter) {
                 if (selectedId === 'equipmentBtn') {
-                    await i.update({ ephemeral: true, embeds: equipEmbedArr, components: [row], fetchReply: true });
+                    await i.update({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
                 } else if (selectedId === 'siBtn') {
-                    await i.update({ ephemeral: true, embeds: siEmbedArr, components: [row], fetchReply: true });
+                    await i.update({ ephemeral: false, embeds: siEmbedArr, components: [row], fetchReply: true });
                 }
             } else {
                 await i.update({ components: [] });
