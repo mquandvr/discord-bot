@@ -75,9 +75,9 @@ const execute = async (interaction, client) => {
 
     if (!content || content.length === 0) {
         content = "Data not found";
-    } else {
-        content = `# ${metaData.name} \r ${content}`;
     }
+    
+    content = `# ${metaData.name} \r ${content}`;
 
     await interaction.reply({ ephemeral: false, content: content });
 }
