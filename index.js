@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, PermissionsBitField, Permissions, MessageManager, Embed, Collection } = require(`discord.js`);
+const { Client, GatewayIntentBits, Collection } = require(`discord.js`);
 const fs = require('fs');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
@@ -18,7 +18,7 @@ app.use('/update-meta', (req, res) => {
         console.log("update Meta")
     const request = require('request');
 
-    let url = "https://script.googleusercontent.com/macros/echo?user_content_key=6gdThRofZLYQQbwMQ0kMHcitIgSzEsbJxKHaV_7m4vKGke23v_jWEKsdD4HXRyQ7l8T1NSUzKFKM22VrEGwLd-sVCSxNYVI_m5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnNbSNYUf49WhSblcpEssPibXxunUr0fAUIH7LR13GIFHjaI55AelAfXKuoNYuvi_wB85J8-vKCy4LhKo8EIPsp5H7k9httSgJg&lib=Mo_ff6-GGtnbrTI8W1SVhSA8PhaH1kT4G";
+    let url = process.env.url_meta;
 
     let options = {json: true};
 
