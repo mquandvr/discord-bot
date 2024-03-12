@@ -18,21 +18,22 @@ app.use('/healthz', (req, res) => {
 });
 
 app.use('/', (req, res) => {
+    res.sendStatus(200).json("hello world");;
+});
 
+app.use('/login', (req, res) => {
     const functions = fs.readdirSync("./src/functions").filter(file => file.endsWith(".js"));
     const eventFiles = fs.readdirSync("./src/events").filter(file => file.endsWith(".js"));
     const commandFolders = fs.readdirSync("./src/commands");
     
-    setTimeout(async () => {
+    (async () => {
         for (file of functions) {
             require(`./src/functions/${file}`)(client);
         }
         client.handleEvents(eventFiles, "./src/events");
         client.handleCommands(commandFolders, "./src/commands");
         await client.login(process.env.token)
-    }, 3000);
-    
-    res.sendStatus(200).json("hello world");;
+    })();
 });
 
 //app.use(express.static('/assets'));
