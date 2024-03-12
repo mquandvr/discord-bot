@@ -1,6 +1,5 @@
 [
     {
-        "id": 1,
         "name": "World Boss",
         "value": "wb",
         "data": [
@@ -27,7 +26,6 @@
         ]
     },
     {
-        "id": 2,
         "name": "Altar of Time",
         "value": "aot",
         "data": [
@@ -54,7 +52,6 @@
         ]
     },
     {
-        "id": 3,
         "name": "Aernasis Hammer",
         "value": "ah",
         "data": [
@@ -71,12 +68,11 @@
             {
                 "name": "Phase 3",
                 "value": "p3",
-                "key": "Tia_Elesis_Mayden_Ley(T)_Muse(T)_V1_132764DAE064AE0DE99298AC826CCC9F127AD8B2612E3E440611F31D9CDBA5BC8D88ECFA9B43A6D211F0F923705CF4E514E97B18F1C9DF676E81C0EDF90A6A0811363FC0D25F53D517F66A0DEF6D55991E719194772108B74DF96B27894553088D702453BCE8342F9E15F25E9D7F94D90187B6E137B76E86A2F3DA603A81AC1D "
+                "key": "Tia_Elesis_Mayden_Ley(T)_Muse(T)_V1_132764DAE064AE0DE99298AC826CCC9F127AD8B2612E3E440611F31D9CDBA5BC8D88ECFA9B43A6D211F0F923705CF4E514E97B18F1C9DF676E81C0EDF90A6A0811363FC0D25F53D517F66A0DEF6D55991E719194772108B74DF96B27894553088D702453BCE8342F9E15F25E9D7F94D90187B6E137B76E86A2F3DA603A81AC1D"
             }
         ]
     },
     {
-        "id": 4,
         "name": "Void Onslaught",
         "value": "vo",
         "data": [
@@ -98,7 +94,6 @@
         ]
     },
     {
-        "id": 5,
         "name": "Vulcanus Exam",
         "value": "ve",
         "data": [
@@ -119,5 +114,4 @@
             }
         ]
     }
-
 ]
