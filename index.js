@@ -12,21 +12,21 @@ const commandFolders = fs.readdirSync("./src/commands");
 
 (async () => {
     for (file of functions) {
-        require(`./functions/${file}`)(client);
+        require(`./src/functions/${file}`)(client);
     }
     client.handleEvents(eventFiles, "./src/events");
     client.handleCommands(commandFolders, "./src/commands");
     client.login(process.env.token)
 })();
 
-const express = require('express')
-const app = express()
-const port = process.env.PORT || 4000;
+var express = require('express');
+var app = express();
+//var path = require('path');
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+//app.use(express.static(__dirname)); // Current directory is root
+app.use('/media', express.static(__dirname + '/assets'));
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+//app.use(express.static('/assets'));
+
+app.listen(3000);
+console.log('Listening on port 3000');
