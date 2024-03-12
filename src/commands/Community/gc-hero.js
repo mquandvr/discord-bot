@@ -62,14 +62,15 @@ const execute = async (interaction, client) => {
     const equipmentBtn = new ButtonBuilder()
         .setCustomId('equipmentBtn')
         .setLabel('Equipment')
-        .setStyle(ButtonStyle.Primary);
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
 
     const siBtn = new ButtonBuilder()
         .setCustomId('siBtn')
         .setLabel('Soul Imprint')
-        .setStyle(ButtonStyle.Secondary);
+        .setStyle(ButtonStyle.Primary);
 
-    const row = new ActionRowBuilder()
+    let row = new ActionRowBuilder()
         .addComponents(equipmentBtn, siBtn);
 
     //const channel = client.channels.cache.get(interaction.channel.id);
@@ -86,8 +87,18 @@ const execute = async (interaction, client) => {
             const collectorFilter = i => i.user.id === interaction.user.id;
             if (collectorFilter) {
                 if (selectedId === 'equipmentBtn') {
+                    equipmentBtn.setDisabled(true).setStyle(ButtonStyle.Secondary);
+                    siBtn.setDisabled(false).setStyle(ButtonStyle.Primary);
+
+                    row = new ActionRowBuilder()
+                        .addComponents(equipmentBtn, siBtn);
                     await i.update({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
                 } else if (selectedId === 'siBtn') {
+                    equipmentBtn.setDisabled(false).setStyle(ButtonStyle.Primary);
+                    siBtn.setDisabled(true).setStyle(ButtonStyle.Secondary);
+
+                    row = new ActionRowBuilder()
+                        .addComponents(equipmentBtn, siBtn);
                     await i.update({ ephemeral: false, embeds: siEmbedArr, components: [row], fetchReply: true });
                 }
             } else {
