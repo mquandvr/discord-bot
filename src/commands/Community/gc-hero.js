@@ -28,7 +28,7 @@ const autocomplete = async (interaction, client) => {
             name: choice.name,
             value: choice.value
         }
-    })
+    });
     await interaction.respond(results.slice(0, 25));
 }
 
@@ -53,7 +53,7 @@ const execute = async (interaction, client) => {
         const equipFileNames = fileNames.filter(file => file.includes("equip"));
         const siFileNames = fileNames.filter(file => file.includes("si"));
 
-        console.log("equipFileNames", equipFileNames)
+        console.log("equipFileNames", equipFileNames);
 
         equipEmbedArr = createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData);
         siEmbedArr = createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData);
@@ -111,7 +111,7 @@ const createDataEmbeds = (fileNames, title, clazz, attribute, content, heroData)
         clazz: clazz,
         attribute: attribute,
         content: content
-    }
+    };
     let cnt = 0;
     if (fileNames && fileNames.length > 0) {
         for (const fileName of fileNames) {
@@ -146,7 +146,7 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
                 { name: 'Content', value: `${template.content}`, inline: true },
-            )
+            );
     }
     //equipEmbeb.setImage(`attachment://${fileName}`)
     equipEmbed.setImage(template.imagePath);
@@ -158,4 +158,4 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
     return equipEmbed;
 }
 
-module.exports = { data, autocomplete, execute }
+module.exports = { data, autocomplete, execute };
