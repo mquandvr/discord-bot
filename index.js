@@ -14,29 +14,27 @@ var app = express();
 app.use('/media', express.static(__dirname + '/assets'));
 
 app.use('/healthz', (req, res) => {
-    res.sendStatus(200).json("healthz");;
+    res.send('healthz');
 });
 
 app.use('/', (req, res) => {
-    res.sendStatus(200).json("hello world");;
-});
-
-app.use('/login', (req, res) => {
-    const functions = fs.readdirSync("./src/functions").filter(file => file.endsWith(".js"));
-    const eventFiles = fs.readdirSync("./src/events").filter(file => file.endsWith(".js"));
-    const commandFolders = fs.readdirSync("./src/commands");
-    
-    (async () => {
-        for (file of functions) {
-            require(`./src/functions/${file}`)(client);
-        }
-        client.handleEvents(eventFiles, "./src/events");
-        client.handleCommands(commandFolders, "./src/commands");
-        await client.login(process.env.token)
-    })();
+    res.send('hello world');
 });
 
 //app.use(express.static('/assets'));
 
 app.listen(80);
 console.log('Listening on port 80');
+
+const functions = fs.readdirSync("./src/functions").filter(file => file.endsWith(".js"));
+const eventFiles = fs.readdirSync("./src/events").filter(file => file.endsWith(".js"));
+const commandFolders = fs.readdirSync("./src/commands");
+
+(async () => {
+    for (file of functions) {
+        require(`./src/functions/${file}`)(client);
+    }
+    client.handleEvents(eventFiles, "./src/events");
+    client.handleCommands(commandFolders, "./src/commands");
+    client.login(process.env.token)
+})();
