@@ -6,7 +6,7 @@ var domainName = process.env.domain;
 
 const metas = require('../../data/meta.json');
 
-const MAX_RECORD_OF_PAGE = process.env.max_record_of_page;
+const MAX_RECORD_OF_PAGE = process.env.max_record_of_page ?? 6;
 
 const data = new SlashCommandBuilder()
     .setName('gc-meta')
@@ -55,10 +55,16 @@ const autocomplete = async (interaction, client) => {
                 value: choice?.value
             };
         });
+
+        console.log("results", results)
         await interaction.respond(results);
     } catch (e) {
         console.error(e)
-        await interaction.respond({ content: 'Error'});
+        const results = [{
+            name: "Data not Found",
+            value: 0
+        }]
+        await interaction.respond(results);
     }
     
 }
