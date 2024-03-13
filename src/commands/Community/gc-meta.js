@@ -6,6 +6,8 @@ var domainName = process.env.domain;
 
 const metas = require('../../data/meta.json');
 
+const MAX_RECORD_OF_PAGE = process.env.max_record_of_page;
+
 const data = new SlashCommandBuilder()
     .setName('gc-meta')
     .setDescription('Grandchase Hero Build Command!')
@@ -63,10 +65,11 @@ const execute = async (interaction, client) => {
 
     const metaData = metas.find(h => h.value === contentValue);
 
-    if (!contentValue || !metaData) return await interaction.reply({ content: 'Meta not found!' });
+    if (!contentValue || !metaData || !metaData.data) return await interaction.reply({ content: 'Meta not found!' });
 
     let content = "";
-    for (const phase of metaData.data) {
+    const dataSlice = metaData.data.length > MAX_RECORD_OF_PAGE ? metaData.data.slice(0, MAX_RECORD_OF_PAGE) : metaData.data;
+    for (const phase of dataSlice) {
         if (phaseValue && phaseValue !== phase.value) {
             continue;
         }
@@ -76,15 +79,97 @@ const execute = async (interaction, client) => {
     if (!content || content.length === 0) {
         content = "Data not found";
     }
-    
+
     content = `# ${metaData.name} \r ${content}`;
 
-    await interaction.reply({ ephemeral: false, content: content });
+    // PAGINATION BUTTON
+    let row = new ActionRowBuilder();
+    const numberOfPagination = Math.ceil(metaData.data.length / Number.parseInt(MAX_RECORD_OF_PAGE));
+    //if (numberOfPagination > 1) {
+    for (let index = 0; index < numberOfPagination; index++) {
+        let record = index + 1;
+        const pagiX = new ButtonBuilder()
+            .setCustomId(`${record}`)
+            .setLabel(`${record}`)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(false);
+        if (record === 1) {
+            pagiX.setStyle(ButtonStyle.Primary)
+                .setDisabled(true);
+        }
+        row.addComponents(pagiX);
+    }
+    //}
+
+    let response;
+    if (numberOfPagination > 1) {
+        response = await interaction.reply({ ephemeral: false, content: content, components: [row], fetchReply: true })
+
+        //const collectorFilter = i => i.user.id === interaction.user.id;
+
+        //const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
+        const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
+        collector.on('collect', async i => {
+            try {
+                const selectedId = i.customId
+                const collectorFilter = i => i.user.id === interaction.user.id;
+                if (collectorFilter) {
+                    const dataCurrentPage = Number.parseInt(MAX_RECORD_OF_PAGE) * (Number.parseInt(selectedId) - 1);
+                    let dataMaxPage = dataCurrentPage + Number.parseInt(MAX_RECORD_OF_PAGE);
+                    dataMaxPage = metaData.data.length < dataMaxPage ? metaData.data.length : dataMaxPage;
+
+                    const dataSlice = metaData.data.slice(dataCurrentPage, dataMaxPage);
+                    content = "";
+                    for (const phase of dataSlice) {
+                        if (phaseValue && phaseValue !== phase.value) {
+                            continue;
+                        }
+                        content += dataTemplate(phase);
+                    }
+
+                    if (!content || content.length === 0) {
+                        content = "Data not found";
+                    }
+
+                    content = `# ${metaData.name} \r ${content}`;
+
+                    row = new ActionRowBuilder();
+                    for (let index = 0; index < numberOfPagination; index++) {
+                        let record = index + 1;
+                        const pagiX = new ButtonBuilder()
+                            .setCustomId(`${record}`)
+                            .setLabel(`${record}`)
+                            .setStyle(ButtonStyle.Secondary)
+
+                        if (record == selectedId) {
+                            pagiX.setStyle(ButtonStyle.Primary)
+                                .setDisabled(true);
+                        }
+                        row.addComponents(pagiX);
+                    }
+
+                    await i.update({ ephemeral: false, content: content, components: [row], fetchReply: true });
+                } else {
+                    await i.update({ components: [] });
+                }
+            } catch (e) {
+                console.error(e)
+                await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+            }
+        })
+
+        collector.on('end', async i => {
+            await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+        })
+    } else {
+        await interaction.reply({ ephemeral: false, content: content, fetchReply: false })
+    }
+
 }
 
 const dataTemplate = (data, title) => {
     const headerData = `**${data.name}**`;
-    const dataKey = `\`\`\`${data.key}\`\`\``;
+    const dataKey = `\`\`\`${data.key ?? "Data not Found"}\`\`\``;
     return `${headerData} ${dataKey} \r`;
 }
 

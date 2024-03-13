@@ -42,5 +42,22 @@ module.exports = {
             }
         }
 
+        if (interaction.isButton()) {
+            const command = client.commands.get(interaction.commandName);
+
+            if (!command) return console.log('Command was not found');
+
+            try {
+                console.log("run execute")
+                await command.execute(interaction, client);
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({
+                    content: 'There was an error while executing this command!',
+                    ephemeral: true,
+                });
+            }
+        }
+
     },
 };

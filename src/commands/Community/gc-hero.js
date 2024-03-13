@@ -62,13 +62,14 @@ const execute = async (interaction, client) => {
     const equipmentBtn = new ButtonBuilder()
         .setCustomId('equipmentBtn')
         .setLabel('Equipment')
-        .setStyle(ButtonStyle.Secondary)
+        .setStyle(ButtonStyle.Primary)
         .setDisabled(true);
 
     const siBtn = new ButtonBuilder()
         .setCustomId('siBtn')
         .setLabel('Soul Imprint')
-        .setStyle(ButtonStyle.Primary);
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(false);
 
     let row = new ActionRowBuilder()
         .addComponents(equipmentBtn, siBtn);
@@ -80,25 +81,22 @@ const execute = async (interaction, client) => {
     const response = await interaction.reply({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
     //const collectorFilter = i => i.user.id === interaction.user.id;
 
-    const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
+    //const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
+    const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
     collector.on('collect', async i => {
         try {
             const selectedId = i.customId
             const collectorFilter = i => i.user.id === interaction.user.id;
             if (collectorFilter) {
                 if (selectedId === 'equipmentBtn') {
-                    equipmentBtn.setDisabled(true).setStyle(ButtonStyle.Secondary);
-                    siBtn.setDisabled(false).setStyle(ButtonStyle.Primary);
+                    equipmentBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
+                    siBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
 
-                    row = new ActionRowBuilder()
-                        .addComponents(equipmentBtn, siBtn);
                     await i.update({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
                 } else if (selectedId === 'siBtn') {
-                    equipmentBtn.setDisabled(false).setStyle(ButtonStyle.Primary);
-                    siBtn.setDisabled(true).setStyle(ButtonStyle.Secondary);
+                    equipmentBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
+                    siBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
 
-                    row = new ActionRowBuilder()
-                        .addComponents(equipmentBtn, siBtn);
                     await i.update({ ephemeral: false, embeds: siEmbedArr, components: [row], fetchReply: true });
                 }
             } else {
