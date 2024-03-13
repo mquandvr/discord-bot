@@ -42,6 +42,16 @@ app.use('/healthz', (req, res) => {
     res.send('healthz');
 });
 
+app.use('/wakeup', (req, res) => {
+    for (file of functions) {
+        require(`./src/functions/${file}`)(client);
+    }
+    client.handleEvents(eventFiles, "./src/events");
+    client.handleCommands(commandFolders, "./src/commands");
+    client.login(process.env.token)
+    res.send('wake up!');
+});
+
 app.use('/', (req, res) => {
     res.send('hello world');
 });
