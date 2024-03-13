@@ -25,36 +25,42 @@ const data = new SlashCommandBuilder()
     );
 
 const autocomplete = async (interaction, client) => {
-    const focusedValue = interaction.options.getFocused();
-    let fileterChoices = [];
-    let metaFileterChoices = [];
-
-    const content = interaction.options.getString('content');
-    const phase = interaction.options.getString('phase');
-    console.log("content", content);
-    console.log("phase", phase);
-
-    if (phase !== null) {
-        metaFileterChoices = metas.filter((meta) =>
-            meta.value.toLowerCase() === content
-        );
-        fileterChoices = metaFileterChoices[0].data.filter((data) =>
-            data.name.toLowerCase().includes(focusedValue.toLowerCase())
-        );
-    } else if (content !== null) {
-        metaFileterChoices = metas.filter((meta) =>
-            meta.name.toLowerCase().includes(focusedValue.toLowerCase())
-        );
-        fileterChoices = metaFileterChoices;
+    try {
+        const focusedValue = interaction.options.getFocused();
+        let fileterChoices = [];
+        let metaFileterChoices = [];
+    
+        const content = interaction.options.getString('content');
+        const phase = interaction.options.getString('phase');
+        console.log("content", content);
+        console.log("phase", phase);
+    
+        if (phase !== null) {
+            metaFileterChoices = metas?.filter((meta) =>
+                meta?.value?.toLowerCase() === content
+            );
+            fileterChoices = metaFileterChoices[0]?.data.filter((data) =>
+                data?.name.toLowerCase().includes(focusedValue.toLowerCase())
+            );
+        } else if (content !== null) {
+            metaFileterChoices = metas?.filter((meta) =>
+                meta?.name.toLowerCase().includes(focusedValue.toLowerCase())
+            );
+            fileterChoices = metaFileterChoices;
+        }
+    
+        const results = fileterChoices?.map((choice) => {
+            return {
+                name: choice?.name,
+                value: choice?.value
+            };
+        });
+        await interaction.respond(results);
+    } catch (e) {
+        console.error(e)
+        await interaction.respond({ content: 'Error'});
     }
-
-    const results = fileterChoices.map((choice) => {
-        return {
-            name: choice.name,
-            value: choice.value
-        };
-    });
-    await interaction.respond(results.slice(0, 25));
+    
 }
 
 const execute = async (interaction, client) => {
@@ -63,14 +69,14 @@ const execute = async (interaction, client) => {
     console.log("content", contentValue);
     console.log("phase", phaseValue);
 
-    const metaData = metas.find(h => h.value === contentValue);
+    const metaData = metas?.find(h => h?.value === contentValue);
 
     if (!contentValue || !metaData || !metaData.data) return await interaction.reply({ content: 'Meta not found!' });
 
     let content = "";
     const dataSlice = metaData.data.length > MAX_RECORD_OF_PAGE ? metaData.data.slice(0, MAX_RECORD_OF_PAGE) : metaData.data;
     for (const phase of dataSlice) {
-        if (phaseValue && phaseValue !== phase.value) {
+        if (phaseValue && phaseValue !== phase?.value) {
             continue;
         }
         content += dataTemplate(phase);
@@ -80,11 +86,11 @@ const execute = async (interaction, client) => {
         content = "Data not found";
     }
 
-    content = `# ${metaData.name} \r ${content}`;
+    content = `# ${metaData?.name} \r ${content}`;
 
     // PAGINATION BUTTON
     let row = new ActionRowBuilder();
-    const numberOfPagination = Math.ceil(metaData.data.length / Number.parseInt(MAX_RECORD_OF_PAGE));
+    const numberOfPagination = Math.ceil(metaData?.data?.length / Number.parseInt(MAX_RECORD_OF_PAGE));
     //if (numberOfPagination > 1) {
     for (let index = 0; index < numberOfPagination; index++) {
         let record = index + 1;
