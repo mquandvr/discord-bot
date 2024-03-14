@@ -40,19 +40,19 @@ const autocomplete = async (interaction, client) => {
                 meta?.value?.toLowerCase() === content
             );
             fileterChoices = metaFileterChoices[0]?.data.filter((data) =>
-                data?.name.toLowerCase().includes(focusedValue.toLowerCase())
+                data?.name?.toLowerCase().includes(focusedValue.toLowerCase())
             );
         } else if (content !== null) {
             metaFileterChoices = metas?.filter((meta) =>
-                meta?.name.toLowerCase().includes(focusedValue.toLowerCase())
+                meta?.name?.toLowerCase().includes(focusedValue.toLowerCase())
             );
             fileterChoices = metaFileterChoices;
         }
     
         const results = fileterChoices?.map((choice) => {
             return {
-                name: choice?.name,
-                value: choice?.value
+                name: choice?.name ?? 'Data not Found',
+                value: choice?.value ?? 0
             };
         });
 
