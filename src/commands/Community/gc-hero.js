@@ -50,8 +50,8 @@ const execute = async (interaction, client) => {
     let siEmbedArr = [];
 
     if (fileNames && fileNames.length > 0) {
-        const equipFileNames = fileNames.filter(file => file.includes("equip"));
-        const siFileNames = fileNames.filter(file => file.includes("si"));
+        const equipFileNames = fileNames.filter(file => file.includes("_equip"));
+        const siFileNames = fileNames.filter(file => file.includes("_si"));
 
         console.log("equipFileNames", equipFileNames);
 
