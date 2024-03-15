@@ -1,9 +1,8 @@
-const { Interaction } = require("discord.js");
-const heros = require('../data/hero.json');
 
 module.exports = {
     name: 'interactionCreate',
     async execute(interaction, client) {
+        console.log("call interaction")
         if (interaction.isAutocomplete()) {
             const command = client.commands.get(interaction.commandName);
 
@@ -14,7 +13,7 @@ module.exports = {
             }
 
             try {
-                console.log("run autocomplete")
+                console.log("run autocomplete");
                 await command.autocomplete(interaction, client);
             } catch (error) {
                 console.log(error);
@@ -31,7 +30,7 @@ module.exports = {
             if (!command) return console.log('Command was not found');
 
             try {
-                console.log("run execute")
+                console.log("run execute input command")
                 await command.execute(interaction, client);
             } catch (error) {
                 console.error(error);
@@ -48,7 +47,7 @@ module.exports = {
             if (!command) return console.log('Command was not found');
 
             try {
-                console.log("run execute")
+                console.log("run execute button")
                 await command.execute(interaction, client);
             } catch (error) {
                 console.error(error);

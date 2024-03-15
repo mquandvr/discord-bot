@@ -1,7 +1,10 @@
+const path = require('path');
+
 module.exports = (client) => {
-    client.handleEvents = async (eventFiles, path) => {
+    client.handleEvents = async (eventFiles, pathFile) => {
         for (const file of eventFiles) {
-            const event = require(`../events/${file}`);
+            const filePath = path.join(pathFile, file);
+            const event = require(filePath);
             if (event.once) {
                 client.once(event.name, (...args) => event.execute(...args, client));
             } else {

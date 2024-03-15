@@ -1,55 +1,51 @@
-const { Client, GatewayIntentBits, Collection } = require(`discord.js`);
 const fs = require('fs');
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
-
-client.commands = new Collection();
-
-require('dotenv').config();
-
 var express = require('express');
+
+const { retrieveData } = require('./src/utils/fetch');
+const { writeData } = require('./src/utils/files');
+require('dotenv').config();
 var app = express();
 //var path = require('path');
 
 //app.use(express.static(__dirname)); // Current directory is root
 app.use('/media', express.static(__dirname + '/assets'));
 
-app.use('/update-meta', (req, res) => {
+app.use('/update-meta', async (req, res) => {
     // res.send('updateMeta');
-        console.log("update Meta")
-    const request = require('request');
+     console.log("update Meta")
 
+    try {
+        await retrieveDataMeta();
+        res.send('done!');
+    } catch (e) {
+        console.error(e);
+        res.send('Error!')
+    }
+});
+
+const retrieveDataMeta = async () => {
     let url = process.env.url_meta;
 
-    let options = {json: true};
-
-    request(url, options, (error, resp, body) => {
-        if (error) {
-            console.log(error)
-            return res.send('error');
-        };
-
-        if (!error && res.statusCode == 200) {
-            // do something with JSON, using the 'body' variable
-            console.log("body", body.data);
-            fs.writeFileSync('./src/data/meta.json', JSON.stringify(body.data));
-            res.send('done');
-        };
-    });
-
-});
+    try {
+        let data = await retrieveData(url);
+        writeData('./src/data/meta.json', data.data);
+    } catch (e) {
+        console.error(e);
+    }
+}
 
 app.use('/healthz', (req, res) => {
     res.send('healthz');
 });
 
 app.use('/wakeup', (req, res) => {
-    for (file of functions) {
-        require(`./src/functions/${file}`)(client);
-    }
-    client.handleEvents(eventFiles, "./src/events");
-    client.handleCommands(commandFolders, "./src/commands");
-    client.login(process.env.token)
-    res.send('wake up!');
+    const meta = require('./src/login'); 
+    meta.login();
+});
+
+app.use('/login', (req, res) => {
+    app._router
+        res.send('login success!');
 });
 
 app.use('/', (req, res) => {
@@ -57,18 +53,21 @@ app.use('/', (req, res) => {
 });
 //app.use(express.static('/assets'));
 
-app.listen(80);
+//app.listen(80);
 console.log('Listening on port 80');
 
-const functions = fs.readdirSync("./src/functions").filter(file => file.endsWith(".js"));
-const eventFiles = fs.readdirSync("./src/events").filter(file => file.endsWith(".js"));
-const commandFolders = fs.readdirSync("./src/commands");
+app = app.listen(80, function () {
+    console.log('Listening :)');
+    app.close(function () {
+        console.info("Server closed. Restarting.");
+        var server = express();
+        server.get("/", (req, res) => testResponse(req, res));
+        server.listen(80);
+        console.info("Server is listening to port 80.");
+    });
+});;
 
 (async () => {
-    for (file of functions) {
-        require(`./src/functions/${file}`)(client);
-    }
-    client.handleEvents(eventFiles, "./src/events");
-    client.handleCommands(commandFolders, "./src/commands");
-    client.login(process.env.token)
+    const meta = require('./src/login'); 
+    meta.login();
 })();
