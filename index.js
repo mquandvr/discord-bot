@@ -28,7 +28,7 @@ const retrieveDataMeta = async () => {
     try {
         let data = await retrieveData(url);
         if (data && data.data) {
-            writeFile(data);
+            writeFile(data.data);
             console.log('update success!')
         } else {
             console.log('data not found')
