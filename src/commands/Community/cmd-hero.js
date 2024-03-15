@@ -161,13 +161,14 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
     const equipEmbed = new EmbedBuilder()
         .setColor(0x0099FF);
     if (isHeaderRecord) {
+        console.log(template.data.description)
         equipEmbed.setTitle(template.title)
-            .setDescription(quote(template.data.description))
             //.setThumbnail('https://i.imgur.com/AfFp7pu.png')
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
                 { name: 'Content', value: `${template.content}`, inline: true },
-            );
+                { name: 'Description', value: quote(template.data.description ?? "Nothing.") },
+        );
     }
     //equipEmbeb.setImage(`attachment://${fileName}`)
     equipEmbed.setImage(template.imagePath);
