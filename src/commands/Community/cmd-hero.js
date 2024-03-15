@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji } = require('discord.js');
+const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, quote } = require('discord.js');
 const fs = require('fs');
 
 var domainName = process.env.domain;
@@ -162,6 +162,7 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
         .setColor(0x0099FF);
     if (isHeaderRecord) {
         equipEmbed.setTitle(template.title)
+            .setDescription(quote(template.data.description))
             //.setThumbnail('https://i.imgur.com/AfFp7pu.png')
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
