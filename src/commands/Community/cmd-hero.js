@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, quote } = require('discord.js');
+const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } = require('discord.js');
 const fs = require('fs');
 
 var domainName = process.env.domain;
@@ -161,13 +161,12 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
     const equipEmbed = new EmbedBuilder()
         .setColor(0x0099FF);
     if (isHeaderRecord) {
-        console.log(template.data.description)
         equipEmbed.setTitle(template.title)
             //.setThumbnail('https://i.imgur.com/AfFp7pu.png')
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
-                { name: 'Content', value: `${template.content}`, inline: true },
-                { name: 'Description', value: quote(template.data.description ?? "Nothing.") },
+                { name: 'Content', value: `${codeBlock(template.content)}`, inline: false },
+                { name: 'Note', value: `${blockQuote(template.data.note ?? "Nothing.")}`, inline: false },
         );
     }
     //equipEmbeb.setImage(`attachment://${fileName}`)
