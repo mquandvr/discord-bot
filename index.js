@@ -2,7 +2,7 @@ const fs = require('fs');
 var express = require('express');
 
 const { retrieveData } = require('./src/utils/fetch');
-const { writeData } = require('./src/utils/files');
+const { writeFile } = require('./src/utils/files');
 require('dotenv').config();
 var app = express();
 //var path = require('path');
@@ -10,9 +10,8 @@ var app = express();
 //app.use(express.static(__dirname)); // Current directory is root
 app.use('/media', express.static(__dirname + '/assets'));
 
-app.use('/update-meta', async (req, res) => {
-    // res.send('updateMeta');
-     console.log("update Meta")
+app.use('/update-data', async (req, res) => {
+    console.log("update data")
 
     try {
         await retrieveDataMeta();
@@ -28,7 +27,12 @@ const retrieveDataMeta = async () => {
 
     try {
         let data = await retrieveData(url);
-        writeData('./src/data/meta.json', data.data);
+        if (data && data.data) {
+            writeFile(data);
+            console.log('update success!')
+        } else {
+            console.log('data not found')
+        }
     } catch (e) {
         console.error(e);
     }
@@ -39,13 +43,13 @@ app.use('/healthz', (req, res) => {
 });
 
 app.use('/wakeup', (req, res) => {
-    const meta = require('./src/login'); 
+    const meta = require('./src/login');
     meta.login();
 });
 
 app.use('/login', (req, res) => {
     app._router
-        res.send('login success!');
+    res.send('login success!');
 });
 
 app.use('/', (req, res) => {
@@ -53,21 +57,21 @@ app.use('/', (req, res) => {
 });
 //app.use(express.static('/assets'));
 
-//app.listen(80);
+app.listen(80);
 console.log('Listening on port 80');
 
-app = app.listen(80, function () {
-    console.log('Listening :)');
-    app.close(function () {
-        console.info("Server closed. Restarting.");
-        var server = express();
-        server.get("/", (req, res) => testResponse(req, res));
-        server.listen(80);
-        console.info("Server is listening to port 80.");
-    });
-});;
+// app = app.listen(80, function () {
+//     console.log('Listening :)');
+//     app.close(function () {
+//         console.info("Server closed. Restarting.");
+//         var server = express();
+//         //server.get("/", (req, res) => testResponse(req, res));
+//         server.listen(80);
+//         console.info("Server is listening to port 80.");
+//     });
+// });
 
 (async () => {
-    const meta = require('./src/login'); 
+    const meta = require('./src/login');
     meta.login();
 })();

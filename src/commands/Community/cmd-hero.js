@@ -46,10 +46,9 @@ const execute = async (interaction, client) => {
         if (!heroValue || !heroData) return await interaction.reply({ content: 'Hero not found!' });
 
         const fileNames = fs.readdirSync(`./assets/${heroData.value}`).filter(file => file.endsWith(".jpg"));
-        const attribute = formatEmoji(attributes[heroData.attribute]) ?? "none";
-        const clazz = formatEmoji(classes[heroData.clazz]) ?? "none";
+        const attribute = attributes[heroData.attribute] ? formatEmoji(attributes[heroData.attribute]) : "";
+        const clazz = classes[heroData.clazz] ? formatEmoji(classes[heroData.clazz]) : "";
         const content = heroData.content ?? "PVE";
-
         let equipEmbedArr = [];
         let siEmbedArr = [];
 

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { retrieveData } = require('../../utils/fetch');
-const { writeData } = require('../../utils/files');
+const { writeFile } = require('../../utils/files');
 
 const data = new SlashCommandBuilder()
     .setName('gc-meta-update')
@@ -11,9 +11,14 @@ const execute = async (interaction, client) => {
     let url = process.env.url_meta;
     let data = await retrieveData(url);
     try {
-        console.log("data", data.data);
-        writeData('./src/data/meta.json', data.data);
-        await interaction.reply({ ephemeral: true, content: 'Updated meta success!', fetchReply: false });
+        if (data && data.data) {
+            writeFile(data.data);
+            console.log('update success!');
+            await interaction.reply({ ephemeral: true, content: 'Updated meta success!', fetchReply: false });
+        } else {
+            console.log('data not found');
+            await interaction.reply({ ephemeral: true, content: 'Data not found!', fetchReply: false });
+        }
     } catch (e) {
         await interaction.reply({ ephemeral: true, content: 'Update meta failed!', fetchReply: false });
     }

@@ -1,10 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, codeBlock } = require('discord.js');
-const fs = require('fs');
-
-var domainName = process.env.domain;
+const { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, codeBlock, formatEmoji } = require('discord.js');
 
 const metas = require('../../data/meta.json');
+const classes = require('../../data/class.json');
+const attributes = require('../../data/attribute.json');
 
 const MAX_RECORD_OF_PAGE = process.env.max_record_of_page ?? 6;
 
@@ -76,12 +75,17 @@ const execute = async (interaction, client) => {
         console.log("content", contentValue);
         console.log("phase", phaseValue);
 
-        const metaData = metas?.find(h => h?.value === contentValue);
+        let metaData = metas?.find(h => h?.value === contentValue);
 
         if (!contentValue || !metaData || !metaData.data) return await interaction.reply({ content: 'Meta not found!' });
 
+        let phaseData = metaData.data;
+        if (phaseValue) {
+            phaseData = [metaData.data?.find(p => p.value === phaseValue)];
+        }
+
         let content = "";
-        const dataSlice = metaData.data.length > MAX_RECORD_OF_PAGE ? metaData.data.slice(0, MAX_RECORD_OF_PAGE) : metaData.data;
+        const dataSlice = phaseData.length > MAX_RECORD_OF_PAGE ? phaseData.slice(0, MAX_RECORD_OF_PAGE) : phaseData;
         for (const phase of dataSlice) {
             if (phaseValue && phaseValue !== phase?.value) {
                 continue;
@@ -95,9 +99,9 @@ const execute = async (interaction, client) => {
 
         content = `# ${metaData?.name} \r ${content}`;
 
-        // PAGINATION BUTTON
+        // PAGINATION
         let row = new ActionRowBuilder();
-        const numberOfPagination = Math.ceil(metaData?.data?.length / Number.parseInt(MAX_RECORD_OF_PAGE));
+        const numberOfPagination = Math.ceil(phaseData?.length / Number.parseInt(MAX_RECORD_OF_PAGE));
         //if (numberOfPagination > 1) {
         for (let index = 0; index < numberOfPagination; index++) {
             let record = index + 1;
@@ -129,9 +133,9 @@ const execute = async (interaction, client) => {
                     if (collectorFilter) {
                         const dataCurrentPage = Number.parseInt(MAX_RECORD_OF_PAGE) * (Number.parseInt(selectedId) - 1);
                         let dataMaxPage = dataCurrentPage + Number.parseInt(MAX_RECORD_OF_PAGE);
-                        dataMaxPage = metaData.data.length < dataMaxPage ? metaData.data.length : dataMaxPage;
+                        dataMaxPage = phaseData.length < dataMaxPage ? phaseData.length : dataMaxPage;
 
-                        const dataSlice = metaData.data.slice(dataCurrentPage, dataMaxPage);
+                        const dataSlice = phaseData.slice(dataCurrentPage, dataMaxPage);
                         content = "";
                         for (const phase of dataSlice) {
                             if (phaseValue && phaseValue !== phase.value) {
@@ -188,9 +192,21 @@ const execute = async (interaction, client) => {
 }
 
 const dataTemplate = (data) => {
-    const headerData = `${bold(data.name)} ${(data.subName)}`;
+    const headerData = `${bold(data.name)} ${bold(dataSubTemplete(data.subName))}`;
     const dataKey = codeBlock(data.key ?? "Data not Found");
     return `${headerData} ${dataKey} \r`;
+}
+
+const dataSubTemplete = (dataSub) => {
+    const dataSubArr = dataSub.split(',');
+    let dataConvertArr = [];
+    for (let index = 0; index < dataSubArr.length; index++) {
+        let emojiCd = attributes[dataSubArr[index]] ?? classes[dataSubArr[index]];
+        let emojiKey = emojiCd ? formatEmoji(emojiCd) : dataSubArr[index];
+        dataConvertArr.push(emojiKey);
+    }
+    //console.log('dataConvertArr', dataConvertArr)
+    return dataConvertArr.join(' ');
 }
 
 module.exports = { data, autocomplete, execute };
