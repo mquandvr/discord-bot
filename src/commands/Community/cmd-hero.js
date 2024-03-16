@@ -194,13 +194,13 @@ const createContentTable = (hero) => {
           field: 'content',
         },
         {
-          width: 25,
+          width: 20,
           label: 'Phase',
           index: 1,
           field: 'phase',
         },
         {
-          width: 5,
+          width: 10,
           label: 'Rank',
           index: 1,
           field: 'rank',
