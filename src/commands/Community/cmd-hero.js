@@ -1,12 +1,14 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } = require('discord.js');
 const fs = require('fs');
+const { TableBuilder } = require('../../utils/table.js');
 
 var domainName = process.env.domain;
 
 const heros = require('../../data/hero.json');
 const classes = require('../../data/class.json');
 const attributes = require('../../data/attribute.json');
+const tiers = require('../../data/tier.json');
 
 const data = new SlashCommandBuilder()
     .setName('gc-hero')
@@ -165,7 +167,7 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
             //.setThumbnail('https://i.imgur.com/AfFp7pu.png')
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
-                { name: 'Content', value: `${codeBlock(template.content)}`, inline: false },
+                { name: 'Content', value: `${codeBlock(createContentTable(template.data.value))}`, inline: false },
                 { name: 'Note', value: `${blockQuote(template.data.note ?? "Nothing.")}`, inline: false },
         );
     }
@@ -177,6 +179,39 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
             .setFooter({ text: 'Last updated' });
     }
     return equipEmbed;
+}
+
+const createContentTable = (hero) => {
+    const tier = tiers.find(v => v.hero === hero);
+
+    if (!tier) return "Nothing!";
+    
+    const columns = [
+        {
+          width: 25,
+          label: 'Content',
+          index: 0,
+          field: 'content',
+        },
+        {
+          width: 15,
+          label: 'Phase',
+          index: 1,
+          field: 'phase',
+        },
+        {
+          width: 5,
+          label: 'Rank',
+          index: 1,
+          field: 'rank',
+        },
+      ];
+    const table = new TableBuilder(columns);
+    tier.data.forEach(t => {
+        table.addRows(t);
+    });
+
+    return table.build();
 }
 
 module.exports = { data, autocomplete, execute };

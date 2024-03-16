@@ -29,6 +29,9 @@ const writeFile = (data) => {
         if (data.hero) {
             writeData('./src/data/hero.json', data.hero);
         }
+        if (data.tier) {
+            writeData('./src/data/tier.json', data.tier);
+        }
     } catch (e) {
         console.error(e);
     }
