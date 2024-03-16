@@ -188,13 +188,13 @@ const createContentTable = (hero) => {
     
     const columns = [
         {
-          width: 25,
+          width: 15,
           label: 'Content',
           index: 0,
           field: 'content',
         },
         {
-          width: 15,
+          width: 25,
           label: 'Phase',
           index: 1,
           field: 'phase',
