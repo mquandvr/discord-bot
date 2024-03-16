@@ -47,22 +47,27 @@ const execute = async (interaction, client) => {
 
         if (!heroValue || !heroData) return await interaction.reply({ content: 'Hero not found!' });
 
-        const fileNames = fs.readdirSync(`./assets/${heroData.value}`).filter(file => file.endsWith(".jpg"));
+        let fileNames = [];
+        try {
+            fileNames = fs.readdirSync(`./assets/${heroData.value}`).filter(file => file.endsWith(".jpg"));
+        } catch (e) {
+            console.log("File image not found!");
+            fileNames = [];
+        }
         const attribute = attributes[heroData.attribute] ? formatEmoji(attributes[heroData.attribute]) : "";
         const clazz = classes[heroData.clazz] ? formatEmoji(classes[heroData.clazz]) : "";
         const content = heroData.content ?? "PVE";
-        let equipEmbedArr = [];
-        let siEmbedArr = [];
 
+        let equipFileNames = [];
+        let siFileNames = [];
         if (fileNames && fileNames.length > 0) {
-            const equipFileNames = fileNames.filter(file => file.match('(_equip)(?:[\.|\_])'));
-            const siFileNames = fileNames.filter(file => file.match('(_si)(?:[\.|\_])'));
+            equipFileNames = fileNames.filter(file => file.match('(_equip)(?:[\.|\_])'));
+            siFileNames = fileNames.filter(file => file.match('(_si)(?:[\.|\_])'));
 
             console.log("equipFileNames", equipFileNames);
-
-            equipEmbedArr = createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData);
-            siEmbedArr = createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData);
         }
+        const equipEmbedArr = createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData);
+        const siEmbedArr = createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData);
 
         const equipmentBtn = new ButtonBuilder()
             .setCustomId('equipmentBtn')
