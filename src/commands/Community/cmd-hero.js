@@ -138,7 +138,7 @@ const createDataEmbeds = (fileNames, title, clazz, attribute, content, heroData)
     if (fileNames && fileNames.length > 0) {
         for (const fileName of fileNames) {
             cnt++;
-            const imagePath = `${domainName}/media/${template.data.value}/${fileName}`;
+            const imagePath = `${domainName}/${template.data.value}/${fileName}`;
             console.log('imagePath', imagePath);
             template.imagePath = imagePath;
             const isLastRecord = cnt === fileNames.length;
