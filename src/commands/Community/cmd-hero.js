@@ -25,7 +25,7 @@ const autocomplete = async (interaction, client) => {
     try {
         const focusedValue = interaction.options.getFocused();
         const fileterChoices = heros.filter((hero) =>
-            hero.name.toLowerCase().startsWith(focusedValue.toLowerCase())
+            hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
         );
         const results = fileterChoices.map((choice) => {
             return {
