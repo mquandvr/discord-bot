@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } = require('discord.js');
 const fs = require('fs');
 const { TableBuilder } = require('../../utils/table.js');
+const { convertDateToTimetamp } = require('../../utils/date.js');
 
 var domainName = process.env.domain;
 
@@ -180,7 +181,7 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
     equipEmbed.setImage(template.imagePath);
     if (isLastRecord) {
         equipEmbed
-            .setTimestamp(template.data.timestamp)
+            .setTimestamp(convertDateToTimetamp(template.data.updated))
             .setFooter({ text: 'Last updated' });
     }
     return equipEmbed;
