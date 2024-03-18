@@ -48,10 +48,10 @@ const autocomplete = async (interaction, client) => {
             fileterChoices = metaFileterChoices;
         }
 
-        const results = fileterChoices?.map((choice) => {
+        const results = fileterChoices?.map((choice, index) => {
             return {
                 name: choice?.name ?? 'Data not Found',
-                value: choice?.value ?? 0
+                value: choice?.value ?? `v${index}`
             };
         });
 
@@ -61,7 +61,7 @@ const autocomplete = async (interaction, client) => {
         console.error(e)
         const results = [{
             name: "Data not Found",
-            value: 0
+            value: `v0`
         }]
         await interaction.respond(results);
     }

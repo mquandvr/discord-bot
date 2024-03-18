@@ -27,15 +27,20 @@ const autocomplete = async (interaction, client) => {
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
         );
-        const results = fileterChoices.map((choice) => {
+        const results = fileterChoices.map((choice, index) => {
             return {
                 name: choice.name,
-                value: choice.value
+                value: choice.value ?? `v${index}`
             }
         });
         await interaction.respond(results.slice(0, 25));
     } catch (e) {
         console.log(e);
+        const results = [{
+            name: "Data not Found",
+            value: `dt`
+        }]
+        await interaction.respond(results);
     }
 }
 
