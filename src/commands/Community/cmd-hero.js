@@ -66,14 +66,15 @@ const execute = async (interaction, client) => {
 
         let equipFileNames = [];
         let siFileNames = [];
+        let iconFileNames = [];
         if (fileNames && fileNames.length > 0) {
             equipFileNames = fileNames.filter(file => file.match('(_equip)(?:[\.|\_])'));
             siFileNames = fileNames.filter(file => file.match('(_si)(?:[\.|\_])'));
-
+            iconFileNames = fileNames.filter(file => file.match('(_icon)(?:[\.|\_])'));
             console.log("equipFileNames", equipFileNames);
         }
-        const equipEmbedArr = createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData);
-        const siEmbedArr = createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData);
+        const equipEmbedArr = createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
+        const siEmbedArr = createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
 
         const equipmentBtn = new ButtonBuilder()
             .setCustomId('equipmentBtn')
@@ -136,14 +137,15 @@ const execute = async (interaction, client) => {
     }
 }
 
-const createDataEmbeds = (fileNames, title, clazz, attribute, content, heroData) => {
+const createDataEmbeds = (fileNames, title, clazz, attribute, content, heroData, icon) => {
     const embedArr = [];
     let template = {
         data: heroData,
         title: title,
         clazz: clazz,
         attribute: attribute,
-        content: content
+        content: content,
+        icon: icon,
     };
     let cnt = 0;
     if (fileNames && fileNames.length > 0) {
@@ -175,7 +177,7 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
         .setColor(0x0099FF);
     if (isHeaderRecord) {
         equipEmbed.setTitle(template.title)
-            //.setThumbnail('https://i.imgur.com/AfFp7pu.png')
+            .setThumbnail(`${domainName}/${template.data.value}/${template.icon}`)
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
                 { name: 'Content', value: `${codeBlock(createContentTable(template.data.value))}`, inline: false },
