@@ -79,13 +79,26 @@ const execute = async (interaction, client) => {
 
         if (!contentValue || !metaData || !metaData.data) return await interaction.reply({ content: 'Meta not found!' });
 
-        let phaseData = metaData.data;
+        let phaseDatas = metaData.data;
         if (phaseValue) {
-            phaseData = [metaData.data?.find(p => p.value === phaseValue)];
+            phaseDatas = [metaData.data?.find(p => p.value === phaseValue)];
         }
 
+        // let iconHeros = [];
+        // phaseDatas.forEach(phase => {
+        //     const key = phase.key;
+        //     const filterHeros = key.match(/^([^_]+)_([^_]+)_([^_]+)_([^_]+)/);
+        //     if (filterHeros) {
+        //         const heroNames = filterHeros.slice(1, 5);
+        //         iconHeros = heros.filter(h => heroNames.includes(h.name))
+        //                                 .map(h => `${domainName}/${h.value}/gc_ai_icon.jpg`);
+        //         console.log('icon heros', iconHeros)
+        //     }
+        //     phase.iconHeros = iconHeros;
+        // });
+
         let content = "";
-        const dataSlice = phaseData.length > MAX_RECORD_OF_PAGE ? phaseData.slice(0, MAX_RECORD_OF_PAGE) : phaseData;
+        const dataSlice = phaseDatas.length > MAX_RECORD_OF_PAGE ? phaseDatas.slice(0, MAX_RECORD_OF_PAGE) : phaseDatas;
         for (const phase of dataSlice) {
             if (phaseValue && phaseValue !== phase?.value) {
                 continue;
@@ -101,7 +114,7 @@ const execute = async (interaction, client) => {
 
         // PAGINATION
         let row = new ActionRowBuilder();
-        const numberOfPagination = Math.ceil(phaseData?.length / Number.parseInt(MAX_RECORD_OF_PAGE));
+        const numberOfPagination = Math.ceil(phaseDatas?.length / Number.parseInt(MAX_RECORD_OF_PAGE));
         //if (numberOfPagination > 1) {
         for (let index = 0; index < numberOfPagination; index++) {
             let record = index + 1;
@@ -133,9 +146,9 @@ const execute = async (interaction, client) => {
                     if (collectorFilter) {
                         const dataCurrentPage = Number.parseInt(MAX_RECORD_OF_PAGE) * (Number.parseInt(selectedId) - 1);
                         let dataMaxPage = dataCurrentPage + Number.parseInt(MAX_RECORD_OF_PAGE);
-                        dataMaxPage = phaseData.length < dataMaxPage ? phaseData.length : dataMaxPage;
+                        dataMaxPage = phaseDatas.length < dataMaxPage ? phaseDatas.length : dataMaxPage;
 
-                        const dataSlice = phaseData.slice(dataCurrentPage, dataMaxPage);
+                        const dataSlice = phaseDatas.slice(dataCurrentPage, dataMaxPage);
                         content = "";
                         for (const phase of dataSlice) {
                             if (phaseValue && phaseValue !== phase.value) {
@@ -193,8 +206,12 @@ const execute = async (interaction, client) => {
 
 const dataTemplate = (data) => {
     const headerData = `${bold(data.name)} ${bold(dataSubTemplete(data.subName))}`;
+    let dataIcon = '';
+    // data.iconHeros.forEach(i => {
+    //     dataIcon += `${i} `;
+    // })
     const dataKey = codeBlock(data.key ?? "Data not Found");
-    return `${headerData} ${dataKey} \r`;
+    return `${headerData} ${dataIcon} ${dataKey} \r`;
 }
 
 const dataSubTemplete = (dataSub) => {

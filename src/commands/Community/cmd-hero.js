@@ -177,11 +177,11 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
         .setColor(0x0099FF);
     if (isHeaderRecord) {
         equipEmbed.setTitle(template.title)
-            .setThumbnail(`${domainName}/${template.data.value}/${template.icon}`)
+            //.setThumbnail(`${domainName}/${template.data.value}/${template.icon}`)
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
                 { name: 'Content', value: `${codeBlock(createContentTable(template.data.value))}`, inline: false },
-                { name: 'Note', value: `${blockQuote(template.data.note ?? "Nothing.")}`, inline: false },
+                { name: 'Note', value: `${blockQuote(template.data.note ?? "Updating!")}`, inline: false },
         );
     }
     //equipEmbeb.setImage(`attachment://${fileName}`)
@@ -197,7 +197,7 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
 const createContentTable = (hero) => {
     const tier = tiers.find(v => v.hero === hero);
 
-    if (!tier) return "Nothing!";
+    if (!tier) return "Updating!";
     
     const columns = [
         {
@@ -215,7 +215,7 @@ const createContentTable = (hero) => {
         {
           width: 7,
           label: 'Rank',
-          index: 1,
+          index: 2,
           field: 'rank',
         },
       ];
