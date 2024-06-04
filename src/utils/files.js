@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 const writeData = (filePath, data) => {
     try {
@@ -37,4 +37,4 @@ const writeFile = (data) => {
     }
 };
 
-module.exports = { writeFile }
+export { writeFile };

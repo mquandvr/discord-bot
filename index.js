@@ -1,26 +1,32 @@
-const fs = require('fs');
-var express = require('express');
+import express from 'express';
 
-const { retrieveData } = require('./src/utils/fetch');
-const { writeFile } = require('./src/utils/files');
-require('dotenv').config();
+import { retrieveData } from './src/utils/fetch.js';
+import { writeFile } from './src/utils/files.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import * as dotenv from 'dotenv';
+dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+//require('dotenv').config();
 var app = express();
 //var path = require('path');
 
 //app.use(express.static(__dirname)); // Current directory is root
 app.use('/media', express.static(__dirname + '/assets'));
 
-app.use('/update-data', async (req, res) => {
-    console.log("update data")
+// app.use('/update-data', async (req, res) => {
+//     console.log("update data")
 
-    try {
-        await retrieveDataMeta();
-        res.send('done!');
-    } catch (e) {
-        console.error(e);
-        res.send('Error!')
-    }
-});
+//     try {
+//         await retrieveDataMeta();
+//         res.send('done!');
+//     } catch (e) {
+//         console.error(e);
+//         res.send('Error!')
+//     }
+// });
 
 const retrieveDataMeta = async () => {
     let url = process.env.url_meta;
@@ -28,10 +34,11 @@ const retrieveDataMeta = async () => {
     try {
         let data = await retrieveData(url);
         if (data && data.data) {
-            writeFile(data.data);
-            console.log('update success!')
+            const database = await import('./src/database.js')
+            database.init(data.data);
+            console.log('update success!');
         } else {
-            console.log('data not found')
+            console.log('no data');
         }
     } catch (e) {
         console.error(e);
@@ -72,6 +79,8 @@ console.log('Listening on port 80');
 // });
 
 (async () => {
-    const meta = require('./src/login');
+    const meta = await import('./src/login.js');
     meta.login();
+
+    await retrieveDataMeta();
 })();

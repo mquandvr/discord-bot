@@ -1,9 +1,11 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, codeBlock, formatEmoji } = require('discord.js');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, codeBlock, formatEmoji } from 'discord.js';
+import { findAll, findOne } from '../../database.js';
+import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_META, DATABASE_NAME_GRANDCHASE } from '../../utils/constants.js';
 
-const metas = require('../../data/meta.json');
-const classes = require('../../data/class.json');
-const attributes = require('../../data/attribute.json');
+// let metas = await import('../../data/meta.json', {assert: { type: "json" }});
+// let classes = await import('../../data/class.json', {assert: { type: "json" }});
+// let attributes = await import('../../data/attribute.json', {assert: { type: "json" }});
 
 const MAX_RECORD_OF_PAGE = process.env.max_record_of_page ?? 6;
 
@@ -33,6 +35,8 @@ const autocomplete = async (interaction, client) => {
         const phase = interaction.options.getString('phase');
         console.log("content", content);
         console.log("phase", phase);
+
+        const metas = await findAll(COLLECTION_META, DATABASE_NAME_GRANDCHASE);
 
         if (phase !== null) {
             metaFileterChoices = metas?.filter((meta) =>
@@ -75,9 +79,10 @@ const execute = async (interaction, client) => {
         console.log("content", contentValue);
         console.log("phase", phaseValue);
 
-        let metaData = metas?.find(h => h?.value === contentValue);
+        let metaData = await findOne(COLLECTION_META, {value: contentValue}, DATABASE_NAME_GRANDCHASE);
+        // let metaData = metas?.find(h => h?.value === contentValue);
 
-        if (!contentValue || !metaData || !metaData.data) return await interaction.reply({ content: 'Meta not found!' });
+        if (!contentValue || !metaData || !metaData.data) return await interaction.editReply({ content: 'Meta not found!' });
 
         let phaseDatas = metaData.data;
         if (phaseValue) {
@@ -99,11 +104,13 @@ const execute = async (interaction, client) => {
 
         let content = "";
         const dataSlice = phaseDatas.length > MAX_RECORD_OF_PAGE ? phaseDatas.slice(0, MAX_RECORD_OF_PAGE) : phaseDatas;
+        const attributes = await findAll(COLLECTION_ATTRIBUTE, DATABASE_NAME_GRANDCHASE);
+        const classes = await findAll(COLLECTION_CLASS, DATABASE_NAME_GRANDCHASE);
         for (const phase of dataSlice) {
             if (phaseValue && phaseValue !== phase?.value) {
                 continue;
             }
-            content += dataTemplate(phase);
+            content += dataTemplate(phase, attributes, classes);
         }
 
         if (!content || content.length === 0) {
@@ -133,7 +140,7 @@ const execute = async (interaction, client) => {
 
         let response;
         if (numberOfPagination > 1) {
-            response = await interaction.reply({ ephemeral: false, content: content, components: [row], fetchReply: true });
+            response = await interaction.editReply({ ephemeral: false, content: content, components: [row], fetchReply: true });
 
             //const collectorFilter = i => i.user.id === interaction.user.id;
 
@@ -154,7 +161,7 @@ const execute = async (interaction, client) => {
                             if (phaseValue && phaseValue !== phase.value) {
                                 continue;
                             }
-                            content += dataTemplate(phase);
+                            content += dataTemplate(phase, attributes, classes);
                         }
 
                         if (!content || content.length === 0) {
@@ -196,7 +203,7 @@ const execute = async (interaction, client) => {
                 }
             })
         } else {
-            await interaction.reply({ ephemeral: false, content: content, fetchReply: false });
+            await interaction.editReply({ ephemeral: false, content: content, fetchReply: false });
         }
 
     } catch (e) {
@@ -204,8 +211,8 @@ const execute = async (interaction, client) => {
     }
 }
 
-const dataTemplate = (data) => {
-    const headerData = `${bold(data.name)} ${bold(dataSubTemplete(data.subName))}`;
+const dataTemplate = (data, attributes, classes) => {
+    const headerData = `${bold(data.name)} ${bold(dataSubTemplete(data.subName, attributes, classes))}`;
     let dataIcon = '';
     // data.iconHeros.forEach(i => {
     //     dataIcon += `${i} `;
@@ -214,16 +221,17 @@ const dataTemplate = (data) => {
     return `${headerData} ${dataIcon} ${dataKey} \r`;
 }
 
-const dataSubTemplete = (dataSub) => {
+const dataSubTemplete = (dataSub, attributes, classes) => {
     const dataSubArr = dataSub.split(',');
     let dataConvertArr = [];
     for (let index = 0; index < dataSubArr.length; index++) {
-        let emojiCd = attributes[dataSubArr[index]] ?? classes[dataSubArr[index]];
+        const attribute = attributes.filter(x => x.id === dataSubArr[index])[0];
+        const clazz = classes.filter(x => x.id === dataSubArr[index])[0];
+        let emojiCd = attribute?.value ?? clazz?.value;
         let emojiKey = emojiCd ? formatEmoji(emojiCd) : dataSubArr[index];
         dataConvertArr.push(emojiKey);
     }
-    //console.log('dataConvertArr', dataConvertArr)
     return dataConvertArr.join(' ');
 }
 
-module.exports = { data, autocomplete, execute };
+export { data, autocomplete, execute };

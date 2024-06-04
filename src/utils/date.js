@@ -15,4 +15,4 @@ const convertStrToTimetamp = (dtStr) => {
     return date.getTime();
 }
 
-module.exports = { convertDateToTimetamp, convertStrToTimetamp };
+export { convertDateToTimetamp, convertStrToTimetamp };

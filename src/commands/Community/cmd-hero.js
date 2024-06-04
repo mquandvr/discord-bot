@@ -1,15 +1,22 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } = require('discord.js');
-const fs = require('fs');
-const { TableBuilder } = require('../../utils/table.js');
-const { convertDateToTimetamp } = require('../../utils/date.js');
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } from 'discord.js';
+import fs from 'fs';
+import * as Table from '../../utils/table.js';
+import { convertDateToTimetamp } from '../../utils/date.js';
+import { findAll, findByCondition, findOne } from '../../database.js';
+import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_TIER, DATABASE_NAME_GRANDCHASE } from '../../utils/constants.js';
 
 var domainName = process.env.domain;
 
-const heros = require('../../data/hero.json');
-const classes = require('../../data/class.json');
-const attributes = require('../../data/attribute.json');
-const tiers = require('../../data/tier.json');
+//import heros from '../../data/hero.json';
+// import classes from '../../data/class.json';
+// import attributes from '../../data/attribute.json';
+// import tiers from '../../data/tier.json';
+
+// let heros = await import('../../data/hero.json', {assert: { type: "json" }});
+// let classes = await import('../../data/class.json', {assert: { type: "json" }});
+// let attributes = await import('../../data/attribute.json', {assert: { type: "json" }});
+// let tiers = await import('../../data/tier.json', {assert: { type: "json" }});
 
 const data = new SlashCommandBuilder()
     .setName('gc-hero')
@@ -24,6 +31,8 @@ const data = new SlashCommandBuilder()
 const autocomplete = async (interaction, client) => {
     try {
         const focusedValue = interaction.options.getFocused();
+        const heros = await findAll(COLLECTION_HERO, DATABASE_NAME_GRANDCHASE);
+        console.log("heros", heros)
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
         );
@@ -49,9 +58,10 @@ const execute = async (interaction, client) => {
         const heroValue = interaction.options.getString('hero');
         console.log("hero", heroValue);
 
-        const heroData = heros.find(h => h.value === heroValue);
+        const heroData = await findOne(COLLECTION_HERO, {value: heroValue}, DATABASE_NAME_GRANDCHASE);
+        // const heroData = heros.find(h => h.value === heroValue);
 
-        if (!heroValue || !heroData) return await interaction.reply({ content: 'Hero not found!' });
+        if (!heroValue || !heroData) return await interaction.editReply({ content: 'Hero not found!' });
 
         let fileNames = [];
         try {
@@ -60,8 +70,10 @@ const execute = async (interaction, client) => {
             console.log("File image not found!");
             fileNames = [];
         }
-        const attribute = attributes[heroData.attribute] ? formatEmoji(attributes[heroData.attribute]) : "";
-        const clazz = classes[heroData.clazz] ? formatEmoji(classes[heroData.clazz]) : "";
+        const attributeData = await findOne(COLLECTION_ATTRIBUTE, {id: heroData.attribute}, DATABASE_NAME_GRANDCHASE);
+        const clazzData = await findOne(COLLECTION_CLASS, {id: heroData.clazz}, DATABASE_NAME_GRANDCHASE);
+        const attribute = attributeData ? formatEmoji(attributeData.value) : "";
+        const clazz = clazzData ? formatEmoji(clazzData.value) : "";
         const content = heroData.content ?? "PVE";
 
         let equipFileNames = [];
@@ -73,8 +85,8 @@ const execute = async (interaction, client) => {
             iconFileNames = fileNames.filter(file => file.match('(_icon)(?:[\.|\_])'));
             console.log("equipFileNames", equipFileNames);
         }
-        const equipEmbedArr = createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
-        const siEmbedArr = createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
+        const equipEmbedArr = await createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
+        const siEmbedArr = await createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
 
         const equipmentBtn = new ButtonBuilder()
             .setCustomId('equipmentBtn')
@@ -95,7 +107,7 @@ const execute = async (interaction, client) => {
         //await interaction.reply({ ephemeral: true, content: 'Loading...!' });
         //await channel.send({ embeds: embed, files: file });
         //await interaction.deleteReply();
-        const response = await interaction.reply({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
+        const response = await interaction.editReply({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
         //const collectorFilter = i => i.user.id === interaction.user.id;
 
         //const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
@@ -137,7 +149,7 @@ const execute = async (interaction, client) => {
     }
 }
 
-const createDataEmbeds = (fileNames, title, clazz, attribute, content, heroData, icon) => {
+const createDataEmbeds = async(fileNames, title, clazz, attribute, content, heroData, icon) => {
     const embedArr = [];
     let template = {
         data: heroData,
@@ -156,31 +168,32 @@ const createDataEmbeds = (fileNames, title, clazz, attribute, content, heroData,
             template.imagePath = imagePath;
             const isLastRecord = cnt === fileNames.length;
             const isHeaderRecord = cnt === 1;
-            const embedTemplate = createEmbedTemplate(template, isLastRecord, isHeaderRecord);
+            const embedTemplate = await createEmbedTemplate(template, isLastRecord, isHeaderRecord);
             embedArr.push(embedTemplate);
         }
     } else {
         console.log("image not found");
         const imagePath = "https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png";
-        const embedTemplate = createEmbedTemplate(template, imagePath);
+        const embedTemplate = await createEmbedTemplate(template, imagePath);
         embedArr.push(embedTemplate);
     }
 
     return embedArr;
 }
 
-const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
+const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
     //let fileImage = new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`);
     //file.push(new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`));
     //console.log(imagePath);
     const equipEmbed = new EmbedBuilder()
         .setColor(0x0099FF);
     if (isHeaderRecord) {
+        const contentTable = await createContentTable(template.data.value);
         equipEmbed.setTitle(template.title)
             //.setThumbnail(`${domainName}/${template.data.value}/${template.icon}`)
             .addFields(
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
-                { name: 'Content', value: `${codeBlock(createContentTable(template.data.value))}`, inline: false },
+                { name: 'Content', value: `${codeBlock(contentTable)}`, inline: false },
                 { name: 'Note', value: `${blockQuote(template.data.note ?? "Updating!")}`, inline: false },
         );
     }
@@ -194,8 +207,8 @@ const createEmbedTemplate = (template, isLastRecord, isHeaderRecord) => {
     return equipEmbed;
 }
 
-const createContentTable = (hero) => {
-    const tier = tiers.find(v => v.hero === hero);
+const createContentTable = async(hero) => {
+    const tier = await findOne(COLLECTION_TIER, {hero: hero}, DATABASE_NAME_GRANDCHASE);
 
     if (!tier) return "Updating!";
     
@@ -219,7 +232,7 @@ const createContentTable = (hero) => {
           field: 'rank',
         },
       ];
-    const table = new TableBuilder(columns);
+    const table = new Table.TableBuilder(columns);
     tier.data.forEach(t => {
         table.addRows(t);
     });
@@ -227,4 +240,4 @@ const createContentTable = (hero) => {
     return table.build();
 }
 
-module.exports = { data, autocomplete, execute };
+export { data, autocomplete, execute };

@@ -1,17 +1,16 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ChannelType } = require('discord.js');
-const fs = require('fs');
-const { TableBuilder } = require('../../utils/table.js');
-const { convertStrToTimetamp } = require('../../utils/date.js');
-const schedule = require('node-schedule')
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { ChannelType } from 'discord.js';
+import { convertStrToTimetamp } from '../../utils/date.js';
+import schedule from 'node-schedule';
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { findAll, insertOneData } from '../../database.js';
+import { COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE } from '../../utils/constants.js';
 
-var aiCode = process.env.aiCode;
+var aiCode = process.env.ai_code;
 const genAI = new GoogleGenerativeAI(aiCode);
 
 const generationConfig = {
-    maxOutputTokens: 1500,
     temperature: 0.9,
     topP: 0.1,
     topK: 16,
@@ -39,24 +38,20 @@ const data = new SlashCommandBuilder()
 
 const execute = async (interaction, client) => {
     try {
-        await interaction.deferReply();
-
         // const schedule = interaction.options.getChannel('schedule');
 
 
         //await interaction.reply({ ephemeral: false, content: 'Waiting', fetchReply: true });
 
         const isSchedule = interaction.options.getBoolean('schedule');
-        const channel = interaction.options.getChannel('channel');
+        const channel = interaction.options.getChannel('channel') ?? interaction.channel;
 
         if (isSchedule) {
             await interaction.editReply({ ephemeral: false, content: 'Schedule added!', fetchReply: true });
-            schedule.scheduleJob('* * 1 * * *', async () => {
-                const contents = await retriveContent();
-                if (contents) {
-                    channel.send({ content: contents.slice(0, 2000) });
-                }
-            });
+            // run 1 time / 1 hour
+            // schedule.scheduleJob('* * 1 * * *', async () => {
+                await retriveContent(channel);
+            // });
         } else {
             const contents = await retriveContent();
             if (contents) {
@@ -76,51 +71,56 @@ const autocomplete = async() => {
     
 }
 
-const retriveContent = async() => {
-    let content;
-    const newDate = new Date();
+const retriveContent = async(channel) => {
+    const newDate = new Date(2024,5,2);
     newDate.setHours(0,0,0,0);
     const urlArticle = "https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/ArticleMenu.json";
     const responseArticle = await fetch(urlArticle);
     const dataArticles = await responseArticle.json();
-    const dataArticleFilters = dataArticles.filter(x => convertStrToTimetamp(x.createTime) === newDate.getTime());
+    const dataPosted = await findAll(COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE);
+    const dataArticleFilters = dataArticles
+                                    .filter(x => convertStrToTimetamp(x.createTime) === newDate.getTime()
+                                                    && !dataPosted.some(p => p.articleId === x.articleId));
+    console.log('dataArticleFilters', dataArticleFilters);
     if (dataArticleFilters && dataArticleFilters.length > 0) {
-        //console.log('dataArticleFilters', dataArticleFilters);
-        const dataArticle = dataArticleFilters[0];
-        // for(const dataArticle in dataArticleFilters) {
-        const urlArticleDetail = `https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/article/${dataArticle.articleId}.json`;
-        const responseArticleDetail = await fetch(urlArticleDetail);
-        const dataArticleDetail = await responseArticleDetail.json();
-        if (dataArticleDetail) {
-            console.log('call bot');
+        // const dataArticle = dataArticleFilters[0];
+        for(const dataArticle of dataArticleFilters) {
+            const urlArticleDetail = `https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/article/${dataArticle.articleId}.json`;
+            const responseArticleDetail = await fetch(urlArticleDetail);
+            const dataArticleDetail = await responseArticleDetail.json();
+            // console.log('dataArticleDetail', dataArticleDetail)
+            if (dataArticleDetail) {
+                // console.log('call bot');
 
-            const prompt = `Summarize the following content according to the timeline.
-            Must follow these rules:
-            1. Convert time from UTC+8 to GMT+7.
-            2. No need to write GMT+7 for the entire content, only write it once.
-            3. Add the content creation date in the header: ${dataArticleDetail?.startTime}
-            4. If the content relates to a reward, write it concisely in the following format: Item (quantity) - method of receipt
-            5. Limit to 1000 characters
-            6. Group contents of the same day together
-            7. Date format: yyyy/MM/dd HH:mm
-            8. Keep the original language (English)
-            9. Replace special characters code for HTML with normal characters
-            10. Add source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
-            11. Full header
-            Content: ${dataArticleDetail?.articleContent}`;
-            
-            const result = await model.generateContent(prompt);
-            const response = result.response;
-            content = response.text();
-        } else {
-            content = '';
+                const prompt = `Summarize the following content according to the timeline.
+                Must follow these rules:
+                1. Convert time from UTC+8 to GMT+7.
+                2. No need to write GMT+7 for the entire content, only write it once in header.
+                3. Add the content creation date in the header: ${dataArticleDetail?.startTime}
+                4. If the content relates to a reward, write it concisely in the following format: Item (quantity) - method of receipt
+                5. Group contents of the same day together
+                6. Date format: yyyy/MM/dd HH:mm
+                7. Keep the original language (English)
+                8. Replace special characters code for HTML with normal characters (Ext: '&times;' must be 'x')
+                9. Add source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
+                10. Full header
+                Content: ${dataArticleDetail?.articleContent}`;
+                
+                const result = await model.generateContent(prompt);
+                const responseText = await result.response.text();
+                console.log(responseText)
+                const array = responseText?.split(/\r\n|\n/)?.filter(x => x && x.length > 0);
+                for (const content of array) {
+                    channel.send({ content: content });
+                    await sleep(500);
+                }
+
+                await insertOneData(COLLECTION_WUWE_NEWS, {articleId: dataArticleDetail?.articleId}, DATABASE_NAME_WUWE);
+            }
         }
-        // }
-    } else {
-        content = `Không có nội dung mới hôm nay (${newDate})`;
     }
-
-    return content;
 };
 
-module.exports = { data, autocomplete, execute };
+let sleep = async (ms) => await new Promise(r => setTimeout(r,ms));
+
+export { data, autocomplete, execute };

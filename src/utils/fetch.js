@@ -1,5 +1,4 @@
-const axios = require('axios');
-const fs = require('fs');
+import axios from 'axios';
 
 const retrieveData = async (url) => {
     try {
@@ -11,4 +10,4 @@ const retrieveData = async (url) => {
     }
 }
 
-module.exports = { retrieveData }
+export { retrieveData };

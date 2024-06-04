@@ -1,5 +1,5 @@
 
-module.exports = {
+export default {
     name: 'interactionCreate',
     async execute(interaction, client) {
         console.log("call interaction")
@@ -31,6 +31,7 @@ module.exports = {
 
             try {
                 console.log("run execute input command")
+                await interaction.deferReply();
                 await command.execute(interaction, client);
             } catch (error) {
                 console.error(error);

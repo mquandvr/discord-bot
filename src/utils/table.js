@@ -1,12 +1,11 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {value: true});
-const tslib_1 = require("tslib");
-const pad_1 = tslib_1.__importDefault(require("pad"));
+//Object.defineProperty(exports, "__esModule", {value: true});
+import pad_1 from 'pad';
 const defaultOptions = {
     sortDirection: 'asc',
 };
 
-class TableBuilder {
+export class TableBuilder {
     constructor(columns, options) {
         this._columns = [TableBuilder._createIndexColumn()];
         if (columns) {
@@ -24,7 +23,7 @@ class TableBuilder {
         // Header
         //let result = `\`${this._buildRow(this._createHeader())}\n`;
         let result = `${this._buildRow(this._createHeader())}\n`;
-        result += pad_1.default('', this._totalWidth(), '―');
+        result += pad_1('', this._totalWidth(), '―');
         // Content
         if (this._options.sortBy) {
             this._sortRows();
@@ -43,14 +42,14 @@ class TableBuilder {
             const colB = this._columns.find((col) => col.field === keyB);
             return colA.index - colB.index;
         });
-        let result = index ? pad_1.default(String(index), TableBuilder._createIndexColumn().width) : '';
+        let result = index ? pad_1(String(index), TableBuilder._createIndexColumn().width) : '';
         keys.forEach((key) => {
             const column = this._columns.find((col) => col.field === key);
             let content = data[key];
             if (column.format && index) {
                 content = column.format(data[key]);
             }
-            result += pad_1.default(String(content), column.width);
+            result += pad_1(String(content), column.width);
         });
         return result;
     }
@@ -108,5 +107,3 @@ class TableBuilder {
         };
     }
 }
-
-exports.TableBuilder = TableBuilder;
