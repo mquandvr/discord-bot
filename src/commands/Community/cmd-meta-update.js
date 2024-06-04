@@ -1,5 +1,4 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { writeFile } from '../../utils/files.js';
 import { retrieveData } from '../../utils/fetch.js';
 import { init } from '../../database.js';
 

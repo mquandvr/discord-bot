@@ -1,7 +1,6 @@
 import express from 'express';
 
 import { retrieveData } from './src/utils/fetch.js';
-import { writeFile } from './src/utils/files.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import * as dotenv from 'dotenv';
