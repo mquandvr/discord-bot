@@ -11,6 +11,7 @@ var aiCode = process.env.ai_code;
 const genAI = new GoogleGenerativeAI(aiCode);
 
 const generationConfig = {
+    maxOutputTokens: 5000,
     temperature: 0.9,
     topP: 0.1,
     topK: 16,
@@ -53,12 +54,8 @@ const execute = async (interaction, client) => {
                 await retriveContent(channel);
             });
         } else {
-            const contents = await retriveContent();
-            if (contents) {
-                await interaction.editReply({ ephemeral: false, content: contents.slice(0, 2000), fetchReply: true });
-            } else {
-                await interaction.editReply({ ephemeral: false, content: 'Content not found', fetchReply: true });
-            }
+            await retriveContent(channel);
+            await interaction.deleteReply();
         }
 
     } catch (e) {
@@ -104,15 +101,19 @@ const retriveContent = async(channel) => {
                 8. Replace special characters code for HTML with normal characters (Ext: '&times;' must be 'x')
                 9. Add source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
                 10. Full header
+                11. With end of group date, add text: [END] to last line
                 Content: ${dataArticleDetail?.articleContent}`;
                 
                 const result = await model.generateContent(prompt);
                 const responseText = await result.response.text();
                 console.log(responseText)
-                const array = responseText?.split(/\r\n|\n/)?.filter(x => x && x.length > 0);
+                const array = responseText?.split("[END]")?.filter(x => x && x.length > 0);
                 for (const content of array) {
-                    channel.send({ content: content });
-                    await sleep(500);
+                    if (![' \n', '', '**', '\n'].includes(content)) {
+                        await sleep(500);
+                        await channel.send({ content: content });
+                        await sleep(500);
+                    }
                 }
 
                 await insertOneData(COLLECTION_WUWE_NEWS, {articleId: dataArticleDetail?.articleId}, DATABASE_NAME_WUWE);
