@@ -72,7 +72,7 @@ const autocomplete = async() => {
 }
 
 const retriveContent = async(channel) => {
-    const newDate = new Date(2024,5,2);
+    const newDate = new Date();
     newDate.setHours(0,0,0,0);
     const urlArticle = "https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/ArticleMenu.json";
     const responseArticle = await fetch(urlArticle);
