@@ -34,7 +34,7 @@ const retrieveDataMeta = async () => {
         let data = await retrieveData(url);
         if (data && data.data) {
             const database = await import('./src/database.js')
-            database.init(data.data);
+            await database.init(data.data);
             console.log('update success!');
         } else {
             console.log('no data');
