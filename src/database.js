@@ -53,8 +53,8 @@ async function init(data) {
             await insertOneData(COLLECTION_WUWE_NEWS, {articleId: 0}, DATABASE_NAME_WUWE);
         }
     
-        await dropCollection(COLLECTION_HERO, DATABASE_NAME_WUWE, database);
-        await insertManyData(COLLECTION_HERO, data.ww.hero, DATABASE_NAME_WUWE, database);
+        await dropCollection(COLLECTION_HERO, DATABASE_NAME_WUWE);
+        await insertManyData(COLLECTION_HERO, data.ww.hero, DATABASE_NAME_WUWE);
     } catch(e) {
         console.log(e);
     } finally {
