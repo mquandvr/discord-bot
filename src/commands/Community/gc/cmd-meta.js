@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, codeBlock, formatEmoji } from 'discord.js';
-import { findAll, findOne } from '../../database.js';
-import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_META, DATABASE_NAME_GRANDCHASE } from '../../utils/constants.js';
+import { findAll, findOne } from '../../../database.js';
+import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_META, DATABASE_NAME_GRANDCHASE } from '../../../utils/constants.js';
 
 // let metas = await import('../../data/meta.json', {assert: { type: "json" }});
 // let classes = await import('../../data/class.json', {assert: { type: "json" }});

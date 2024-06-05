@@ -1,11 +1,11 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChannelType } from 'discord.js';
-import { convertStrToTimetamp, convertYMDStrToTimetamp } from '../../utils/date.js';
+import { convertStrToTimetamp, convertYMDStrToTimetamp } from '../../../utils/date.js';
 import schedule from 'node-schedule';
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { findAll, insertOneData } from '../../database.js';
-import { COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE } from '../../utils/constants.js';
+import { findAll, insertOneData } from '../../../database.js';
+import { COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
 
 var aiCode = process.env.ai_code;
 const genAI = new GoogleGenerativeAI(aiCode);
@@ -19,7 +19,7 @@ const generationConfig = {
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig });
 
 const data = new SlashCommandBuilder()
-    .setName('wuwa')
+    .setName('ww-news')
     .setDescription('Wuthering News Command!')
     .addStringOption(option =>
         option.setName("date")

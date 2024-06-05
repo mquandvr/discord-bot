@@ -33,25 +33,28 @@ async function init(data) {
     try {
         const database = await run(DATABASE_NAME_GRANDCHASE);
         await dropCollection(COLLECTION_META, DATABASE_NAME_GRANDCHASE, database);
-        await insertManyData(COLLECTION_META, data.meta, DATABASE_NAME_GRANDCHASE, database);
+        await insertManyData(COLLECTION_META, data.gc.meta, DATABASE_NAME_GRANDCHASE, database);
     
         await dropCollection(COLLECTION_ATTRIBUTE, DATABASE_NAME_GRANDCHASE, database);
-        await insertManyData(COLLECTION_ATTRIBUTE, data.attribute, DATABASE_NAME_GRANDCHASE, database);
+        await insertManyData(COLLECTION_ATTRIBUTE, data.gc.attribute, DATABASE_NAME_GRANDCHASE, database);
     
         await dropCollection(COLLECTION_CLASS, DATABASE_NAME_GRANDCHASE, database);
-        await insertManyData(COLLECTION_CLASS, data.class, DATABASE_NAME_GRANDCHASE, database);
+        await insertManyData(COLLECTION_CLASS, data.gc.class, DATABASE_NAME_GRANDCHASE, database);
     
         await dropCollection(COLLECTION_HERO, DATABASE_NAME_GRANDCHASE, database);
-        await insertManyData(COLLECTION_HERO, data.hero, DATABASE_NAME_GRANDCHASE, database);
+        await insertManyData(COLLECTION_HERO, data.gc.hero, DATABASE_NAME_GRANDCHASE, database);
     
         await dropCollection(COLLECTION_TIER, DATABASE_NAME_GRANDCHASE, database);
-        await insertManyData(COLLECTION_TIER, data.tier, DATABASE_NAME_GRANDCHASE, database);
+        await insertManyData(COLLECTION_TIER, data.gc.tier, DATABASE_NAME_GRANDCHASE, database);
     
         // await dropCollection(database, COLLECTION_WUWE_NEWS);
         const dataWuwe = await findAll(COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE);
         if (!dataWuwe || dataWuwe.length === 0) {
             await insertOneData(COLLECTION_WUWE_NEWS, {articleId: 0}, DATABASE_NAME_WUWE);
         }
+    
+        await dropCollection(COLLECTION_HERO, DATABASE_NAME_WUWE, database);
+        await insertManyData(COLLECTION_HERO, data.ww.hero, DATABASE_NAME_WUWE, database);
     } catch(e) {
         console.log(e);
     } finally {

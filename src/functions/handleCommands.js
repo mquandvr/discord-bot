@@ -2,18 +2,19 @@ import { REST } from "@discordjs/rest";
 import { Routes } from 'discord-api-types/v9';
 import fs from 'fs';
 
-const clientId = '1215905903287468072';
-
 export const commandHandle = async (client) => {
     client.handleCommands = async (commandFolders, pathFile) => {
         client.commandArray = [];
         for (const folder of commandFolders) {
-            const commandFiles = fs.readdirSync(`${pathFile}/${folder}`).filter(file => file.endsWith('.js'));
-            for (const file of commandFiles) {
-                const filePath = `../commands/${folder}/${file}`;
-                const command = await import(filePath);
-                client.commands.set(command.data.name, command);
-                client.commandArray.push(command.data.toJSON());
+            const commandSubFolders = fs.readdirSync(`${pathFile}/${folder}`);
+            for (const subFolder of commandSubFolders) {
+                const commandFiles = fs.readdirSync(`${pathFile}/${folder}/${subFolder}`).filter(file => file.endsWith('.js'));
+                for (const file of commandFiles) {
+                    const filePath = `../commands/${folder}/${subFolder}/${file}`;
+                    const command = await import(filePath);
+                    client.commands.set(command.data.name, command);
+                    client.commandArray.push(command.data.toJSON());
+                }
             }
         }
 
@@ -26,7 +27,7 @@ export const commandHandle = async (client) => {
                 console.log(`Started refreshing ${client.commandArray.length} application (/) commands.`);
 
                 const data = await rest.put(
-                    Routes.applicationCommands(clientId), {
+                    Routes.applicationCommands(process.env.client_id), {
                         body: client.commandArray
                     },
                 );

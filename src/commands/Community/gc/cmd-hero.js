@@ -1,10 +1,10 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } from 'discord.js';
 import fs from 'fs';
-import * as Table from '../../utils/table.js';
-import { convertDateToTimetamp } from '../../utils/date.js';
-import { findAll, findOne } from '../../database.js';
-import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_TIER, DATABASE_NAME_GRANDCHASE } from '../../utils/constants.js';
+import * as Table from '../../../utils/table.js';
+import { convertDateToTimetamp } from '../../../utils/date.js';
+import { findAll, findOne } from '../../../database.js';
+import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_TIER, DATABASE_NAME_GRANDCHASE } from '../../../utils/constants.js';
 
 var domainName = process.env.domain;
 
@@ -163,7 +163,7 @@ const createDataEmbeds = async(fileNames, title, clazz, attribute, content, hero
     if (fileNames && fileNames.length > 0) {
         for (const fileName of fileNames) {
             cnt++;
-            const imagePath = `${domainName}/${template.data.value}/${fileName}`;
+            const imagePath = `${domainName}/gc/${template.data.value}/${fileName}`;
             console.log('imagePath', imagePath);
             template.imagePath = imagePath;
             const isLastRecord = cnt === fileNames.length;

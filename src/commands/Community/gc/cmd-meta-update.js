@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { retrieveData } from '../../utils/fetch.js';
-import { init } from '../../database.js';
+import { retrieveData } from '../../../utils/fetch.js';
+import { init } from '../../../database.js';
 
 const data = new SlashCommandBuilder()
     .setName('gc-meta-update')
