@@ -59,8 +59,9 @@ const execute = async (interaction, client) => {
 
         if (isSchedule) {
             await interaction.editReply({ ephemeral: false, content: 'Schedule added!', fetchReply: true });
+            console.log(dateTimetamp);
             // run 1 time / 1 hour
-            schedule.scheduleJob('* * 1 * * *', async () => {
+            schedule.scheduleJob('0 */1 * * *', async () => {
                 await retriveContent(channel, dateTimetamp);
                 await sendFooter(channel);
             });

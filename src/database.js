@@ -35,8 +35,6 @@ async function init(data) {
         await initWWData(data);
     } catch(e) {
         console.log(e);
-    } finally {
-        client.close();
     }
 }
 
