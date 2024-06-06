@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_META, COLLECTION_TIER, COLLECTION_WUWE_NEWS, DATABASE_NAME_GRANDCHASE, DATABASE_NAME_WUWE } from "./utils/constants.js";
+import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_META, COLLECTION_TIER, COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_NEWS, COLLECTION_WUWE_WEAPON, DATABASE_NAME_GRANDCHASE, DATABASE_NAME_WUWE } from "./utils/constants.js";
 
 const uri = process.env.db_uri;
 
@@ -31,6 +31,17 @@ async function run(dbName) {
 
 async function init(data) {
     try {
+        await initGBData(data);
+        await initWWData(data);
+    } catch(e) {
+        console.log(e);
+    } finally {
+        client.close();
+    }
+}
+
+async function initGBData(data) {
+    try {
         const database = await run(DATABASE_NAME_GRANDCHASE);
         await dropCollection(COLLECTION_META, DATABASE_NAME_GRANDCHASE, database);
         await insertManyData(COLLECTION_META, data.gc.meta, DATABASE_NAME_GRANDCHASE, database);
@@ -46,19 +57,33 @@ async function init(data) {
     
         await dropCollection(COLLECTION_TIER, DATABASE_NAME_GRANDCHASE, database);
         await insertManyData(COLLECTION_TIER, data.gc.tier, DATABASE_NAME_GRANDCHASE, database);
-    
-        // await dropCollection(database, COLLECTION_WUWE_NEWS);
-        const dataWuwe = await findAll(COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE);
-        if (!dataWuwe || dataWuwe.length === 0) {
-            await insertOneData(COLLECTION_WUWE_NEWS, {articleId: 0}, DATABASE_NAME_WUWE);
-        }
-    
-        await dropCollection(COLLECTION_HERO, DATABASE_NAME_WUWE);
-        await insertManyData(COLLECTION_HERO, data.ww.hero, DATABASE_NAME_WUWE);
     } catch(e) {
         console.log(e);
-    } finally {
-        client.close();
+    }
+}
+
+async function initWWData(data) {
+    try {
+        const database = await run(DATABASE_NAME_WUWE);
+        // await dropCollection(database, COLLECTION_WUWE_NEWS);
+        const dataWuwe = await findAll(COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE, database);
+        if (!dataWuwe || dataWuwe.length === 0) {
+            await insertOneData(COLLECTION_WUWE_NEWS, {articleId: 0}, DATABASE_NAME_WUWE, database);
+        }
+    
+        await dropCollection(COLLECTION_WUWE_HERO, DATABASE_NAME_WUWE, database);
+        await insertManyData(COLLECTION_WUWE_HERO, data.ww.hero, DATABASE_NAME_WUWE, database);
+    
+        await dropCollection(COLLECTION_WUWE_ATTRIBUTE, DATABASE_NAME_WUWE, database);
+        await insertManyData(COLLECTION_WUWE_ATTRIBUTE, data.ww.attribute, DATABASE_NAME_WUWE, database);
+    
+        await dropCollection(COLLECTION_WUWE_WEAPON, DATABASE_NAME_WUWE, database);
+        await insertManyData(COLLECTION_WUWE_WEAPON, data.ww.weapon, DATABASE_NAME_WUWE, database);
+    
+        await dropCollection(COLLECTION_WUWE_IMAGE, DATABASE_NAME_WUWE, database);
+        await insertManyData(COLLECTION_WUWE_IMAGE, data.ww.image, DATABASE_NAME_WUWE, database);
+    } catch(e) {
+        console.log(e);
     }
 }
 

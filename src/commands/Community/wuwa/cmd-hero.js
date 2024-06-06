@@ -1,22 +1,10 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } from 'discord.js';
-import fs from 'fs';
-import * as Table from '../../../utils/table.js';
+import { EmbedBuilder, ActionRowBuilder, ComponentType, formatEmoji, blockQuote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 import { convertDateToTimetamp } from '../../../utils/date.js';
 import { findAll, findOne } from '../../../database.js';
-import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_TIER, DATABASE_NAME_GRANDCHASE, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
+import { COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_WEAPON, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
 
 var domainName = process.env.domain;
-
-//import heros from '../../data/hero.json';
-// import classes from '../../data/class.json';
-// import attributes from '../../data/attribute.json';
-// import tiers from '../../data/tier.json';
-
-// let heros = await import('../../data/hero.json', {assert: { type: "json" }});
-// let classes = await import('../../data/class.json', {assert: { type: "json" }});
-// let attributes = await import('../../data/attribute.json', {assert: { type: "json" }});
-// let tiers = await import('../../data/tier.json', {assert: { type: "json" }});
 
 const data = new SlashCommandBuilder()
     .setName('ww-hero')
@@ -28,10 +16,18 @@ const data = new SlashCommandBuilder()
             .setAutocomplete(true)
     );
 
-const autocomplete = async (interaction, client) => {
+const autocomplete = async (interaction) => {
     try {
         const focusedValue = interaction.options.getFocused();
-        const heros = await findAll(COLLECTION_HERO, DATABASE_NAME_GRANDCHASE);
+        const heros = await findAll(COLLECTION_WUWE_HERO, DATABASE_NAME_WUWE);
+        // const heros = [{
+        //     name: 'Rover (Havoc)',
+        //     value: 'ww_rover_havoc',
+        //     attribute: 'havocattr',
+        //     weapon: 'weapon_sword',
+        //     rarity: 5,
+        //     updated: '2024-06-05T17:00:00.000Z'
+        // }]
         console.log("heros", heros)
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
@@ -58,80 +54,61 @@ const execute = async (interaction, client) => {
         const heroValue = interaction.options.getString('hero');
         console.log("hero", heroValue);
 
-        const heroData = await findOne(COLLECTION_HERO, {value: heroValue}, DATABASE_NAME_GRANDCHASE);
+        const heroData = await findOne(COLLECTION_WUWE_HERO, { value: heroValue }, DATABASE_NAME_WUWE);
         // const heroData = heros.find(h => h.value === heroValue);
 
         if (!heroValue || !heroData) return await interaction.editReply({ content: 'Hero not found!' });
 
-        let fileNames = [];
-        try {
-            // fileNames = fs.readdirSync(`./assets/${heroData.value}`).filter(file => file.endsWith(".jpg"));
-            fileNames = ['rover_echo_set.jpg', 'rover_weapon.jpg']
-        } catch (e) {
-            console.log("File image not found!");
-            fileNames = [];
-        }
-        const attributeData = await findOne(COLLECTION_ATTRIBUTE, {id: heroData.attribute}, DATABASE_NAME_GRANDCHASE);
-        const clazzData = await findOne(COLLECTION_CLASS, {id: heroData.clazz}, DATABASE_NAME_GRANDCHASE);
+        const fileImageData = await findOne(COLLECTION_WUWE_IMAGE, { hero: heroValue }, DATABASE_NAME_WUWE);
+        const fileImageContent = fileImageData.data;
+
+        const attributeData = await findOne(COLLECTION_WUWE_ATTRIBUTE, { id: heroData.attribute }, DATABASE_NAME_WUWE);
+        const weaponData = await findOne(COLLECTION_WUWE_WEAPON, { id: heroData.weapon }, DATABASE_NAME_WUWE);
         const attribute = attributeData ? formatEmoji(attributeData.value) : "";
-        const clazz = clazzData ? formatEmoji(clazzData.value) : "";
-        const content = heroData.content ?? "PVE";
+        const weapon = weaponData ? formatEmoji(weaponData.value) : "";
+        const rarity = `${heroData.rarity ?? ""}★`;
 
-        let equipFileNames = [];
-        let siFileNames = [];
-        let iconFileNames = [];
-        if (fileNames && fileNames.length > 0) {
-            equipFileNames = fileNames.filter(file => file.match('(_weapon)(?:[\.|\_])'));
-            siFileNames = fileNames.filter(file => file.match('(_echo_set)(?:[\.|\_])'));
-            iconFileNames = fileNames.filter(file => file.match('(_icon)(?:[\.|\_])'));
-            console.log("equipFileNames", equipFileNames);
+        let count = 0;
+        const embebArr = [];
+        const selectArr = [];
+
+        const dataEmbeb = {
+            data: heroData,
+            weapon: weapon,
+            attribute: attribute,
+            rarity: rarity,
+        };
+
+        for (const imageName of fileImageContent) {
+            dataEmbeb.title = imageName.content;
+            dataEmbeb.imageName= imageName.image_name;
+
+            embebArr.push(await createDataEmbeds(dataEmbeb));
+            selectArr.push(new StringSelectMenuOptionBuilder()
+                .setLabel(imageName.content)
+                .setValue(`${++count}`)
+                // .setDefault(count == 1 ? true : false)
+            );
         }
-        const equipEmbedArr = await createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
-        const siEmbedArr = await createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
 
-        const equipmentBtn = new ButtonBuilder()
-            .setCustomId('equipmentBtn')
-            .setLabel('Equipment')
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(true);
+        const selectRow = new StringSelectMenuBuilder()
+            .setCustomId('starter')
+            .setPlaceholder('Make a selection!')
+            .addOptions(...selectArr);
 
-        const siBtn = new ButtonBuilder()
-            .setCustomId('siBtn')
-            .setLabel('Soul Imprint')
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(false);
+        const row = new ActionRowBuilder()
+			.addComponents(selectRow);
+            
+        const response = await interaction.editReply({ ephemeral: false, embeds: embebArr[0], components: [row], fetchReply: true });
 
-        let row = new ActionRowBuilder()
-            .addComponents(equipmentBtn, siBtn);
-
-        //const channel = client.channels.cache.get(interaction.channel.id);
-        //await interaction.reply({ ephemeral: true, content: 'Loading...!' });
-        //await channel.send({ embeds: embed, files: file });
-        //await interaction.deleteReply();
-        const response = await interaction.editReply({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
-        //const collectorFilter = i => i.user.id === interaction.user.id;
-
-        //const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
-        const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
+        const collectorFilter = i => i.user.id === interaction.user.id;
+        // const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
+        const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect });
         collector.on('collect', async i => {
             try {
-                const selectedId = i.customId
-                const collectorFilter = i => i.user.id === interaction.user.id;
-                if (collectorFilter) {
-                    if (selectedId === 'equipmentBtn') {
-                        equipmentBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
-                        siBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
-
-                        await i.update({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
-                    } else if (selectedId === 'siBtn') {
-                        equipmentBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
-                        siBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
-
-                        await i.update({ ephemeral: false, embeds: siEmbedArr, components: [row], fetchReply: true });
-                    }
-                } else {
-                    await i.update({ components: [] });
-                }
+                const selectedId = parseInt(i.values[0]);
+                console.log(selectedId);
+                await i.update({ ephemeral: false, embeds: embebArr[selectedId - 1], fetchReply: true });
             } catch (e) {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
@@ -142,103 +119,61 @@ const execute = async (interaction, client) => {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
                 console.error(e);
+                await interaction.deleteReply();
             }
         })
 
     } catch (e) {
         console.log(e);
+        await interaction.deleteReply();
     }
 }
 
-const createDataEmbeds = async(fileNames, title, clazz, attribute, content, heroData, icon) => {
+const createDataEmbeds = async (dataEmbeb) => {
     const embedArr = [];
-    let template = {
-        data: heroData,
-        title: title,
-        clazz: clazz,
-        attribute: attribute,
-        content: content,
-        icon: icon,
-    };
     let cnt = 0;
-    if (fileNames && fileNames.length > 0) {
-        for (const fileName of fileNames) {
+    const imageNames = dataEmbeb.imageName.split(',');
+    if (imageNames && imageNames.length > 0) {
+        for (const imageName of imageNames) {
             cnt++;
-            const imagePath = `${domainName}/wuwa/${template.data.value}/${fileName}`;
+            const imagePath = `${domainName}/wuwa/${dataEmbeb.data.value}/${imageName}.jpg`;
             console.log('imagePath', imagePath);
-            template.imagePath = imagePath;
-            const isLastRecord = cnt === fileNames.length;
+            dataEmbeb.imagePath = imagePath;
+            const isLastRecord = cnt === imageNames.length;
             const isHeaderRecord = cnt === 1;
-            const embedTemplate = await createEmbedTemplate(template, isLastRecord, isHeaderRecord);
+            const embedTemplate = await createEmbedTemplate(dataEmbeb, isLastRecord, isHeaderRecord);
             embedArr.push(embedTemplate);
         }
     } else {
         console.log("image not found");
         const imagePath = "https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png";
-        const embedTemplate = await createEmbedTemplate(template, imagePath);
+        dataEmbeb.imagePath = imagePath;
+        const embedTemplate = await createEmbedTemplate(dataEmbeb);
         embedArr.push(embedTemplate);
     }
 
     return embedArr;
 }
 
-const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
-    //let fileImage = new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`);
-    //file.push(new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`));
-    //console.log(imagePath);
+const createEmbedTemplate = async (template, isLastRecord = true, isHeaderRecord = true) => {
     const equipEmbed = new EmbedBuilder()
         .setColor(0x0099FF);
     if (isHeaderRecord) {
-        const contentTable = await createContentTable(template.data.value);
-        equipEmbed.setTitle(template.title)
-            //.setThumbnail(`${domainName}/${template.data.value}/${template.icon}`)
+        equipEmbed.setTitle(`${template.data.name}`)
             .addFields(
-                { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
-                { name: 'Content', value: `${codeBlock(contentTable)}`, inline: false },
-                { name: 'Note', value: `${blockQuote(template.data.note ?? "Updating!")}`, inline: false },
-        );
+                { name: 'Rarity', value: `${template.rarity}`, inline: true },
+                { name: 'Element', value: `${template.attribute}`, inline: true },
+                { name: 'Weapon', value: `${template.weapon}`, inline: true },
+                { name: 'Copyright', value: `${blockQuote(`@wutheringwave.id`)}`, inline: false },
+            );
     }
-    //equipEmbeb.setImage(`attachment://${fileName}`)
     equipEmbed.setImage(template.imagePath);
     if (isLastRecord) {
         equipEmbed
             .setTimestamp(convertDateToTimetamp(template.data.updated))
             .setFooter({ text: 'Last updated' });
     }
-    return equipEmbed;
-}
-
-const createContentTable = async(hero) => {
-    const tier = await findOne(COLLECTION_TIER, {hero: hero}, DATABASE_NAME_GRANDCHASE);
-
-    if (!tier) return "Updating!";
-    
-    const columns = [
-        {
-          width: 13,
-          label: 'Content',
-          index: 0,
-          field: 'content',
-        },
-        {
-          width: 20,
-          label: 'Phase',
-          index: 1,
-          field: 'phase',
-        },
-        {
-          width: 7,
-          label: 'Rank',
-          index: 2,
-          field: 'rank',
-        },
-      ];
-    const table = new Table.TableBuilder(columns);
-    tier.data.forEach(t => {
-        table.addRows(t);
-    });
-
-    return table.build();
+    return equipEmbed.setColor("Random");
 }
 
 export { data, autocomplete, execute };
