@@ -63,12 +63,10 @@ const execute = async (interaction, client) => {
             // run 1 time / 1 hour
             schedule.scheduleJob('0 */1 * * *', async () => {
                 await retriveContent(channel, dateTimetamp);
-                await sendFooter(channel);
             });
         } else {
             await retriveContent(channel, dateTimetamp);
             await interaction.deleteReply();
-            await sendFooter(channel);
         }
 
     } catch (e) {
@@ -86,7 +84,8 @@ const sendFooter = async (channel) => {
     await channel.send({content: '-----------------------'});
 }
 
-const retriveContent = async (channel, date = Date.now()) => {
+const retriveContent = async (channel, date) => {
+    console.log("date", date);
     const newDate = new Date(date);
     newDate.setHours(0, 0, 0, 0);
     const urlArticle = "https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/ArticleMenu.json";
@@ -134,6 +133,7 @@ const retriveContent = async (channel, date = Date.now()) => {
                         await sleep(500);
                     }
                 }
+                await sendFooter(channel);
 
                 await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId }, DATABASE_NAME_WUWE);
             }

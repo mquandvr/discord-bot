@@ -16,7 +16,7 @@ const convertStrToTimetamp = (dtStr) => {
 }
 
 const convertYMDStrToTimetamp = (dtStr) => {
-    if (!dtStr) return null;
+    if (!dtStr) return Date.now();
     const y = dtStr.substr(0,4);
     const m = dtStr.substr(4,2);
     const d = dtStr.substr(6,2);
