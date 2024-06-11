@@ -53,19 +53,17 @@ const execute = async (interaction, client) => {
             console.log("Error format date");
             await interaction.editReply({ content: 'Wrong format date (yyyyMMdd)!.' });
             return;
-        } else {
-            dateTimetamp = convertYMDStrToTimetamp(date);
         }
 
         if (isSchedule) {
             await interaction.editReply({ ephemeral: false, content: 'Schedule added!', fetchReply: true });
-            console.log(dateTimetamp);
             // run 1 time / 1 hour
             schedule.scheduleJob('0 */1 * * *', async () => {
-                await retriveContent(channel, dateTimetamp);
+                console.log("schedule running")
+                await retriveContent(channel, date);
             });
         } else {
-            await retriveContent(channel, dateTimetamp);
+            await retriveContent(channel, date);
             await interaction.deleteReply();
         }
 
@@ -85,8 +83,9 @@ const sendFooter = async (channel) => {
 }
 
 const retriveContent = async (channel, date) => {
-    console.log("date", date);
-    const newDate = new Date(date);
+    const dateTimetamp = convertYMDStrToTimetamp(date);
+    console.log("date", dateTimetamp);
+    const newDate = new Date(dateTimetamp);
     newDate.setHours(0, 0, 0, 0);
     const urlArticle = "https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/ArticleMenu.json";
     const responseArticle = await fetch(urlArticle);
