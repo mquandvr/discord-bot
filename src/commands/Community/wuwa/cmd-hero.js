@@ -59,8 +59,7 @@ const execute = async (interaction, client) => {
 
         if (!heroValue || !heroData) return await interaction.editReply({ content: 'Hero not found!' });
 
-        const fileImageData = await findOne(COLLECTION_WUWE_IMAGE, { hero: heroValue }, DATABASE_NAME_WUWE);
-        const fileImageContent = fileImageData.data;
+        const fileImageData = await findAll(COLLECTION_WUWE_IMAGE, DATABASE_NAME_WUWE);
 
         const attributeData = await findOne(COLLECTION_WUWE_ATTRIBUTE, { id: heroData.attribute }, DATABASE_NAME_WUWE);
         const weaponData = await findOne(COLLECTION_WUWE_WEAPON, { id: heroData.weapon }, DATABASE_NAME_WUWE);
@@ -79,13 +78,13 @@ const execute = async (interaction, client) => {
             rarity: rarity,
         };
 
-        for (const imageName of fileImageContent) {
-            dataEmbeb.title = imageName.content;
-            dataEmbeb.imageName= imageName.image_name;
+        for (const imageData of fileImageData) {
+            dataEmbeb.title = imageData.content;
+            dataEmbeb.imageName= imageData.data[0].image_name;
 
             embebArr.push(await createDataEmbeds(dataEmbeb));
             selectArr.push(new StringSelectMenuOptionBuilder()
-                .setLabel(imageName.content)
+                .setLabel(imageData.content)
                 .setValue(`${++count}`)
                 // .setDefault(count == 1 ? true : false)
             );
