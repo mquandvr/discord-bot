@@ -119,13 +119,13 @@ const retriveContent = async (channel, date) => {
                 9. Add footer source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
                 10. Add header: ${dataArticleDetail?.articleTitle}. End of header add text: [END] to last line
                 11. In group of date, add text: [END] to the beginning line
-                12. Remove url with an extension image. Ext: jpg, gif, etc.
+                12. When content have url with an extension image. Ext: jpg, gif, etc. Do not add that content.
                 Content: ${dataArticleDetail?.articleContent}`;
 
                 const result = await model.generateContent(prompt);
                 const responseText = await result.response.text();
-                // console.log(responseText)
                 const array = responseText?.split("[END]")?.filter(x => x && x.length > 0);
+                // console.log(array);
                 for (const content of array) {
                     if (![' \n', '', '**', '\n'].includes(content)) {
                         await sleep(500);
