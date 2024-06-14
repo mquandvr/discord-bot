@@ -14,11 +14,17 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 client.commands = new Collection();
 
 const login = async () => {
-    await commandHandle(client);
-    await eventHandle(client);
-    client.handleEvents(eventFiles);
-    client.handleCommands(commandFolders, commandFoldersPath);
-    client.login(process.env.token)
+    try {
+        await commandHandle(client);
+        await eventHandle(client);
+        client.handleEvents(eventFiles);
+        client.handleCommands(commandFolders, commandFoldersPath);
+        await client.login(process.env.token)
+    } catch (e) {
+        console.error(e);
+        await client.destroy();
+        await client.login();
+    }
 }
 
 export { login };
