@@ -136,7 +136,7 @@ const retriveContent = async (channel, date) => {
                 }
                 await sendFooter(channel);
 
-                await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId, channel: channel }, DATABASE_NAME_WUWE);
+                await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId }, DATABASE_NAME_WUWE);
             }
         }
     }
