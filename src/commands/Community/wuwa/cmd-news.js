@@ -111,22 +111,23 @@ const retriveContent = async (channel, date) => {
                 1. Convert time from UTC+8 to GMT+7.
                 2. No need to write GMT+7 for the entire content, only write it once in header.
                 3. Add the content creation date in the header: ${dataArticleDetail?.startTime}
-                4. If the content relates to a reward, write it concisely in the following format: Item (quantity) - method of receipt
-                5. Group contents of the same day together
-                6. Date format: yyyy/MM/dd HH:mm
-                7. Keep the original language (English)
-                8. Replace special characters code for HTML with normal characters (Ext: '&times;' must be 'x')
-                9. Add footer source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
-                10. Add header: ${dataArticleDetail?.articleTitle}. End of header add text: [END] to last line
-                11. In group of date, add text: [END] to the beginning line
-                12. When content have url with an extension image. Ext: jpg, gif, etc. Do not add that content.
+                4. Group contents of the same day together
+                5. Date format: yyyy/MM/dd HH:mm
+                6. Replace special characters code for HTML with normal characters (Ext: '&times;' must be 'x')
+                7. Add footer source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
+                8. Add header: ${dataArticleDetail?.articleTitle}. End of header add text: [END] to last line
+                9. In group of date, add text: [END] to the beginning line
+                10. When content have url with an extension image. Ext: jpg, gif, etc. Do not add that content.
                 Content: ${dataArticleDetail?.articleContent}`;
 
                 const result = await model.generateContent(prompt);
                 const responseText = await result.response.text();
                 const array = responseText?.split("[END]")?.filter(x => x && x.length > 0);
-                // console.log(array);
+                // console.log(responseText);
                 for (const content of array) {
+                    if (content.length > 2000) {
+                        content = content.substring(0, 2000);
+                    }
                     if (![' \n', '', '**', '\n'].includes(content)) {
                         await sleep(500);
                         await channel.send({ content: content });
@@ -135,7 +136,7 @@ const retriveContent = async (channel, date) => {
                 }
                 await sendFooter(channel);
 
-                await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId }, DATABASE_NAME_WUWE);
+                await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId, channel: channel }, DATABASE_NAME_WUWE);
             }
         }
     }
