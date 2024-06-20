@@ -4,6 +4,7 @@ import { retrieveData } from './src/utils/fetch.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import * as dotenv from 'dotenv';
+
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -79,7 +80,10 @@ console.log('Listening on port 80');
 
 (async () => {
     const meta = await import('./src/login.js');
-    meta.login();
+    await meta.login();
 
     await retrieveDataMeta();
+    
+    const cron = await import('./src/cron/cron.js');
+    cron.default(meta.client);
 })();

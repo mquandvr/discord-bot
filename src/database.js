@@ -165,4 +165,17 @@ async function findOne(collectionName, query, dbName, database) {
     }
 }
 
-export { run, init, findAll, findByCondition, findOne, insertOneData }
+async function updateOneData(collectionName, dbName, query, update, options, database) {
+    try {
+        if (!database) {
+            database = await run(dbName);
+        }
+        const collection = database.collection(collectionName);
+        const dataManyResult = collection.updateOne(query, update, options);
+        return dataManyResult;
+    } catch (err) {
+        console.error(`Something went wrong trying to update the ${collectionName}: ${err}\n`);
+    }
+}
+
+export { run, init, findAll, findByCondition, findOne, insertOneData, updateOneData }

@@ -9,6 +9,7 @@ export const COLLECTION_WUWE_HERO = "hero";
 export const COLLECTION_WUWE_ATTRIBUTE = "attribute";
 export const COLLECTION_WUWE_WEAPON = "weapon";
 export const COLLECTION_WUWE_IMAGE = "image";
+export const COLLECTION_WUWE_CHANNEL = "channel";
 
 export const DATABASE_NAME_GRANDCHASE = "grandchase";
 export const DATABASE_NAME_WUWE = "wuwe";

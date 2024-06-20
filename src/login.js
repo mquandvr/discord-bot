@@ -27,4 +27,4 @@ const login = async () => {
     }
 }
 
-export { login };
+export { login, client };
