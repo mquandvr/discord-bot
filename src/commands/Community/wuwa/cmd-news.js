@@ -120,39 +120,28 @@ const retriveContent = async (channel, date) => {
                 7. Keep the original language (English)
                 8. Replace special characters code for HTML with normal characters (Ext: '&times;' must be 'x')
                 9. Add footer source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
-                10. Add header: ${dataArticleDetail?.articleTitle}. End of header add text: [END] to last line
-                11. In group of date, add text: [END] to the beginning line
-                12. When content have url with an extension image. Ext: jpg, gif, etc. Do not add that content.
+                10. Add header: ${dataArticleDetail?.articleTitle}.
+                11. When content have url with an extension image. Ext: jpg, gif, etc. Do not add that content.
                 Content: ${dataArticleDetail?.articleContent}`;
 
                 const result = await model.generateContent(prompt);
                 const responseText = result.response.text();
-                const array = responseText?.split("[END]")?.filter(x => x && x.length > 0);
-                // console.log(array);
-                for (let content of array) {
-                    const cntContentPerSent = Math.ceil(content.length / CONTENT_MAX_LENGTH);
-                    // console.log("content", content.length)
-                    for (let i = 0; i < cntContentPerSent; i++) {
-                        const data = content.substring(0, CONTENT_MAX_LENGTH);
-                        const lastIndexMatchedRegex = getLastIndexMatched(data);
-                        let dataMatched = "";
-                        // console.log("lastIndexMatchedRegex", lastIndexMatchedRegex)
-                        if (lastIndexMatchedRegex < CONTENT_MAX_LENGTH && cntContentPerSent > 1) {
-                            dataMatched = content.substring(0, lastIndexMatchedRegex).trim();
-                            // console.log("dataMatched", dataMatched);
-                            const temp = content.substring(lastIndexMatchedRegex, CONTENT_MAX_LENGTH);
-                            // console.log("temp", temp);
-                            content = temp + content.substring(CONTENT_MAX_LENGTH);
-                        } else {
-                            dataMatched = data.trim();
-                            content = content.substring(CONTENT_MAX_LENGTH);
-                        }
-                        // console.log("dataMatched", dataMatched);
-                        // console.log("dataMatched length", dataMatched.length);
-                        if (![' \n', '', '**', '\n'].includes(dataMatched)) {
+                const array = responseText?.split("\n")?.filter(x => x && x.length > 0);
+                console.log(`total length data resp: ${responseText.length}`);
+                let dataMerge = "";
+                for (const [index, content] of array.entries()) {
+                    if (dataMerge.length + content.length <= CONTENT_MAX_LENGTH) {
+                        dataMerge += content + "\n";
+                    }
+                    
+                    if (dataMerge.length + content.length > CONTENT_MAX_LENGTH || index === array.length - 1){
+                        // console.log(dataMerge);
+                        console.log(`total length data sent: ${dataMerge.length}`);
+                        if (![' \n', '', '**', '\n'].includes(dataMerge)) {
                             await sleep(500);
-                            await channel.send({ content: dataMatched });
+                            await channel.send({ content: dataMerge });
                         }
+                        dataMerge = "";
                     }
                 }
                 await sendFooter(channel);
@@ -166,19 +155,7 @@ const retriveContent = async (channel, date) => {
         console.log(`data ${newDate} not found`);
     }
 };
-``
+
 let sleep = async (ms) => await new Promise(r => setTimeout(r, ms));
-
-const getLastIndexMatched = (data) => {
-    const regex = /(\r\n|\r|\n)/g;
-    let match;
-    let lastIndex = -1;
-
-    while ((match = regex.exec(data)) !== null) {
-        lastIndex = match.index + match[0].length;
-    }
-
-    return lastIndex;
-}
 
 export { data, autocomplete, execute, retriveContent };
