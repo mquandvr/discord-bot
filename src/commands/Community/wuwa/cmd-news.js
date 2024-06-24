@@ -3,7 +3,7 @@ import { ChannelType } from 'discord.js';
 import { convertStrToTimetamp, convertYMDStrToTimetamp } from '../../../utils/date.js';
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { findAll, insertOneData, updateOneData } from '../../../database.js';
+import { findAll, findByCondition, insertOneData, updateOneData } from '../../../database.js';
 import { COLLECTION_WUWE_CHANNEL, COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
 
 var aiCode = process.env.ai_code;
@@ -92,10 +92,10 @@ const retriveContent = async (channel, date) => {
     const urlArticle = "https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/ArticleMenu.json";
     const responseArticle = await fetch(urlArticle);
     const dataArticles = await responseArticle.json();
-    const dataPosted = await findAll(COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE);
+    const dataPosted = await findByCondition(COLLECTION_WUWE_NEWS, {channelId: channel.id}, DATABASE_NAME_WUWE);
     const dataArticleFilters = dataArticles
         .filter(x => convertStrToTimetamp(x.createTime) === newDate.getTime()
-            && !dataPosted.some(p => p.articleId === x.articleId && p.channelId === channel.id));
+            && !dataPosted.some(p => p.articleId === x.articleId));
     // console.log('dataArticleFilters', dataArticleFilters);
     // console.log('dataPosted', dataPosted);
     if (dataArticleFilters && dataArticleFilters.length > 0) {
@@ -135,7 +135,7 @@ const retriveContent = async (channel, date) => {
                     }
                     
                     if (dataMerge.length + content.length > CONTENT_MAX_LENGTH || index === array.length - 1){
-                        // console.log(dataMerge);
+                        console.log(dataMerge);
                         console.log(`total length data sent: ${dataMerge.length}`);
                         if (![' \n', '', '**', '\n'].includes(dataMerge)) {
                             await sleep(500);
