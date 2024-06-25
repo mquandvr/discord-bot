@@ -6,6 +6,9 @@ import { convertDateToTimetamp } from '../../../utils/date.js';
 import { findAll, findOne } from '../../../database.js';
 import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_TIER, DATABASE_NAME_GRANDCHASE } from '../../../utils/constants.js';
 
+import logger from "../../../utils/log.js";
+let log = logger(import.meta.filename);
+
 var domainName = process.env.domain;
 
 //import heros from '../../data/hero.json';
@@ -32,7 +35,7 @@ const autocomplete = async (interaction, client) => {
     try {
         const focusedValue = interaction.options.getFocused();
         const heros = await findAll(COLLECTION_HERO, DATABASE_NAME_GRANDCHASE);
-        console.log("heros", heros)
+        log.info("heros", heros)
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
         );
@@ -44,7 +47,7 @@ const autocomplete = async (interaction, client) => {
         });
         await interaction.respond(results.slice(0, 25));
     } catch (e) {
-        console.log(e);
+        log.error(e);
         const results = [{
             name: "Data not Found",
             value: `dt`
@@ -56,7 +59,7 @@ const autocomplete = async (interaction, client) => {
 const execute = async (interaction, client) => {
     try {
         const heroValue = interaction.options.getString('hero');
-        console.log("hero", heroValue);
+        log.info("hero", heroValue);
 
         const heroData = await findOne(COLLECTION_HERO, {value: heroValue}, DATABASE_NAME_GRANDCHASE);
         // const heroData = heros.find(h => h.value === heroValue);
@@ -67,7 +70,7 @@ const execute = async (interaction, client) => {
         try {
             fileNames = fs.readdirSync(`./assets/${heroData.value}`).filter(file => file.endsWith(".jpg"));
         } catch (e) {
-            console.log("File image not found!");
+            log.warn("File image not found!");
             fileNames = [];
         }
         const attributeData = await findOne(COLLECTION_ATTRIBUTE, {id: heroData.attribute}, DATABASE_NAME_GRANDCHASE);
@@ -83,7 +86,7 @@ const execute = async (interaction, client) => {
             equipFileNames = fileNames.filter(file => file.match('(_equip)(?:[\.|\_])'));
             siFileNames = fileNames.filter(file => file.match('(_si)(?:[\.|\_])'));
             iconFileNames = fileNames.filter(file => file.match('(_icon)(?:[\.|\_])'));
-            console.log("equipFileNames", equipFileNames);
+            // log.info("equipFileNames", equipFileNames);
         }
         const equipEmbedArr = await createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
         const siEmbedArr = await createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
@@ -140,12 +143,12 @@ const execute = async (interaction, client) => {
             try {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
-                console.error(e);
+                log.error(e);
             }
         })
 
     } catch (e) {
-        console.log(e);
+        log.error(e);
     }
 }
 
@@ -164,7 +167,7 @@ const createDataEmbeds = async(fileNames, title, clazz, attribute, content, hero
         for (const fileName of fileNames) {
             cnt++;
             const imagePath = `${domainName}/gc/${template.data.value}/${fileName}`;
-            console.log('imagePath', imagePath);
+            log.info('imagePath', imagePath);
             template.imagePath = imagePath;
             const isLastRecord = cnt === fileNames.length;
             const isHeaderRecord = cnt === 1;
@@ -172,7 +175,7 @@ const createDataEmbeds = async(fileNames, title, clazz, attribute, content, hero
             embedArr.push(embedTemplate);
         }
     } else {
-        console.log("image not found");
+        log.info("image not found");
         const imagePath = "https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png";
         const embedTemplate = await createEmbedTemplate(template, imagePath);
         embedArr.push(embedTemplate);
@@ -184,7 +187,7 @@ const createDataEmbeds = async(fileNames, title, clazz, attribute, content, hero
 const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
     //let fileImage = new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`);
     //file.push(new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`));
-    //console.log(imagePath);
+    //log.info(imagePath);
     const equipEmbed = new EmbedBuilder()
         .setColor(0x0099FF);
     if (isHeaderRecord) {

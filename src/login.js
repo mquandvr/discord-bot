@@ -3,6 +3,9 @@ import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { commandHandle } from './functions/handleCommands.js';
 import { eventHandle } from './functions/handleEvents.js';
 
+import logger from "./utils/log.js";
+let log = logger(import.meta.filename);
+
 const eventsPath = './src/events';
 //const functionsPath = './src/functions';
 const commandFoldersPath = './src/commands';
@@ -15,15 +18,14 @@ client.commands = new Collection();
 
 const login = async () => {
     try {
+        log.info('logging...');
         await commandHandle(client);
         await eventHandle(client);
         client.handleEvents(eventFiles);
         client.handleCommands(commandFolders, commandFoldersPath);
         await client.login(process.env.token)
     } catch (e) {
-        console.error(e);
-        await client.destroy();
-        await client.login();
+        log.error(e);
     }
 }
 

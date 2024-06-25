@@ -1,27 +1,28 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { retrieveData } from '../../../utils/fetch.js';
-import { init } from '../../../database.js';
+import { retrieveData } from '../../utils/fetch.js';
+import { init } from '../../database.js';
+import logger from "../../utils/log.js";
+let log = logger(import.meta.filename);
 
 const data = new SlashCommandBuilder()
-    .setName('gc-meta-update')
-    .setDescription('Grandchase Hero Update Build Meta Command!');
+    .setName('db-update')
+    .setDescription('Update Database Command!');
 
-const execute = async (interaction, client) => {
-    console.log("update meta");
+const execute = async (interaction) => {
+    log.info("update meta");
     let url = process.env.url_meta;
     let data = await retrieveData(url);
     try {
         if (data && data.data) {
             await init(data.data);
-            console.log('update success!');
+            log.info('update success!');
             await interaction.editReply({ ephemeral: true, content: 'Updated meta success!', fetchReply: false });
         } else {
-            console.log('data not found');
+            log.warn('data not found');
             await interaction.editReply({ ephemeral: true, content: 'Data not found!', fetchReply: false });
         }
     } catch (e) {
-        console.log("Error update data: ", e);
-        await interaction.editReply({ ephemeral: true, content: 'Update meta failed!', fetchReply: false });
+        log.error("Error update data: ", e);
     }
 
 }

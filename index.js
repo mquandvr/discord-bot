@@ -5,9 +5,11 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import * as dotenv from 'dotenv';
 
+import logger from "./src/utils/log.js";
+let log = logger(import.meta.filename);
+
 dotenv.config();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = import.meta.dirname;
 
 //require('dotenv').config();
 var app = express();
@@ -17,13 +19,13 @@ var app = express();
 app.use('/media', express.static(__dirname + '/assets'));
 
 // app.use('/update-data', async (req, res) => {
-//     console.log("update data")
+//     log.info("update data")
 
 //     try {
 //         await retrieveDataMeta();
 //         res.send('done!');
 //     } catch (e) {
-//         console.error(e);
+//         log.error(e);
 //         res.send('Error!')
 //     }
 // });
@@ -36,12 +38,12 @@ const retrieveDataMeta = async () => {
         if (data && data.data) {
             const database = await import('./src/database.js')
             await database.init(data.data);
-            console.log('update success!');
+            log.info('update success!');
         } else {
-            console.log('no data');
+            log.info('no data');
         }
     } catch (e) {
-        console.error(e);
+        log.error(e);
     }
 }
 
@@ -65,16 +67,16 @@ app.use('/', (req, res) => {
 //app.use(express.static('/assets'));
 
 app.listen(80);
-console.log('Listening on port 80');
+log.info('Listening on port 80');
 
 // app = app.listen(80, function () {
-//     console.log('Listening :)');
+//     log.info('Listening :)');
 //     app.close(function () {
-//         console.info("Server closed. Restarting.");
+//         log.info("Server closed. Restarting.");
 //         var server = express();
 //         //server.get("/", (req, res) => testResponse(req, res));
 //         server.listen(80);
-//         console.info("Server is listening to port 80.");
+//         log.info("Server is listening to port 80.");
 //     });
 // });
 
@@ -82,7 +84,7 @@ console.log('Listening on port 80');
     const meta = await import('./src/login.js');
     await meta.login();
 
-    await retrieveDataMeta();
+    // await retrieveDataMeta();
     
     const cron = await import('./src/cron/cron.js');
     cron.default(meta.client);

@@ -3,6 +3,9 @@ import { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, code
 import { findAll, findOne } from '../../../database.js';
 import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_META, DATABASE_NAME_GRANDCHASE } from '../../../utils/constants.js';
 
+import logger from "../../../utils/log.js";
+let log = logger(import.meta.filename);
+
 // let metas = await import('../../data/meta.json', {assert: { type: "json" }});
 // let classes = await import('../../data/class.json', {assert: { type: "json" }});
 // let attributes = await import('../../data/attribute.json', {assert: { type: "json" }});
@@ -33,8 +36,8 @@ const autocomplete = async (interaction, client) => {
 
         const content = interaction.options.getString('content');
         const phase = interaction.options.getString('phase');
-        console.log("content", content);
-        console.log("phase", phase);
+        // log.info("content", content);
+        // log.info("phase", phase);
 
         const metas = await findAll(COLLECTION_META, DATABASE_NAME_GRANDCHASE);
 
@@ -59,10 +62,10 @@ const autocomplete = async (interaction, client) => {
             };
         });
 
-        console.log("results", results)
+        log.info("results", results)
         await interaction.respond(results);
     } catch (e) {
-        console.error(e)
+        log.error(e)
         const results = [{
             name: "Data not Found",
             value: `v0`
@@ -76,8 +79,7 @@ const execute = async (interaction, client) => {
     try {
         const contentValue = interaction.options.getString('content');
         const phaseValue = interaction.options.getString('phase');
-        console.log("content", contentValue);
-        console.log("phase", phaseValue);
+        log.info("content %s phase %s", contentValue, phaseValue);
 
         let metaData = await findOne(COLLECTION_META, {value: contentValue}, DATABASE_NAME_GRANDCHASE);
         // let metaData = metas?.find(h => h?.value === contentValue);
@@ -97,7 +99,7 @@ const execute = async (interaction, client) => {
         //         const heroNames = filterHeros.slice(1, 5);
         //         iconHeros = heros.filter(h => heroNames.includes(h.name))
         //                                 .map(h => `${domainName}/${h.value}/gc_ai_icon.jpg`);
-        //         console.log('icon heros', iconHeros)
+        //         log.info('icon heros', iconHeros)
         //     }
         //     phase.iconHeros = iconHeros;
         // });
@@ -190,7 +192,7 @@ const execute = async (interaction, client) => {
                         await i.update({ components: [] });
                     }
                 } catch (e) {
-                    console.error(e);
+                    log.error(e);
                     await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
                 }
             })
@@ -199,7 +201,7 @@ const execute = async (interaction, client) => {
                 try {
                     await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
                 } catch (e) {
-                    console.log(e);
+                    log.info(e);
                 }
             })
         } else {
@@ -207,7 +209,7 @@ const execute = async (interaction, client) => {
         }
 
     } catch (e) {
-        console.log(e);
+        log.error(e);
     }
 }
 

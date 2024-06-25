@@ -1,6 +1,9 @@
 import { MongoClient } from "mongodb";
 import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_META, COLLECTION_TIER, COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_NEWS, COLLECTION_WUWE_WEAPON, DATABASE_NAME_GRANDCHASE, DATABASE_NAME_WUWE } from "./utils/constants.js";
 
+import logger from "./utils/log.js";
+let log = logger(import.meta.filename);
+
 const uri = process.env.db_uri;
 
 // The MongoClient is the object that references the connection to our
@@ -9,7 +12,7 @@ const client = new MongoClient(uri);
 
 async function run(dbName) {
     try {
-        console.log("connect database");
+        log.info("connect database");
 
         // The connect() method does not attempt a connection; instead it instructs
         // the driver to connect using the settings provided when a connection
@@ -22,10 +25,10 @@ async function run(dbName) {
         // const dbName = "grandchase";
         const database = client.db(dbName);
 
-        console.log("connect success");
+        log.info("connect success");
         return database;
     } catch (e) {
-        console.log("Error connect", e);
+        log.error("Error connect", e);
     }
 }
 
@@ -34,7 +37,7 @@ async function init(data) {
         await initGBData(data);
         await initWWData(data);
     } catch(e) {
-        console.log(e);
+        log.error(e);
     }
 }
 
@@ -56,7 +59,7 @@ async function initGBData(data) {
         await dropCollection(COLLECTION_TIER, DATABASE_NAME_GRANDCHASE, database);
         await insertManyData(COLLECTION_TIER, data.gc.tier, DATABASE_NAME_GRANDCHASE, database);
     } catch(e) {
-        console.log(e);
+        log.error(e);
     }
 }
 
@@ -81,7 +84,7 @@ async function initWWData(data) {
         await dropCollection(COLLECTION_WUWE_IMAGE, DATABASE_NAME_WUWE, database);
         await insertManyData(COLLECTION_WUWE_IMAGE, data.ww.image, DATABASE_NAME_WUWE, database);
     } catch(e) {
-        console.log(e);
+        log.error(e);
     }
 }
 
@@ -92,9 +95,9 @@ async function dropCollection(collectionName, dbName, database) {
         }
         const collection = database.collection(collectionName);
         await collection.drop();
-        console.log(`Documents successfully dropped ${collectionName}.\n`);
+        log.info(`Documents successfully dropped ${collectionName}.\n`);
     } catch (err) {
-        console.error(`Something went wrong trying to drop the ${collectionName}: ${err}\n`);
+        log.error(`Something went wrong trying to drop the ${collectionName}: ${err}\n`);
     }
 }
 
@@ -106,9 +109,9 @@ async function insertManyData(collectionName, data, dbName, database) {
         }
         const collection = database.collection(collectionName);
         const insertManyResult = await collection.insertMany(data);
-        console.log(`${insertManyResult.insertedCount} documents successfully inserted ${collectionName}.\n`);
+        log.info(`${insertManyResult.insertedCount} documents successfully inserted ${collectionName}.\n`);
     } catch (err) {
-        console.error(`Something went wrong trying to insert the new ${collectionName}: ${err}\n`);
+        log.error(`Something went wrong trying to insert the new ${collectionName}: ${err}\n`);
     }
 }
 
@@ -120,9 +123,9 @@ async function insertOneData(collectionName, data, dbName, database) {
         }
         const collection = database.collection(collectionName);
         await collection.insertOne(data);
-        console.log(`Documents successfully inserted ${collectionName}.\n`);
+        log.info(`Documents successfully inserted ${collectionName}.\n`);
     } catch (err) {
-        console.error(`Something went wrong trying to insert the new ${collectionName}: ${err}\n`);
+        log.error(`Something went wrong trying to insert the new ${collectionName}: ${err}\n`);
     }
 }
 
@@ -135,7 +138,7 @@ async function findAll(collectionName, dbName, database) {
         const dataManyResult = await collection.find().toArray();
         return dataManyResult;
     } catch (err) {
-        console.error(`Something went wrong trying to select the ${collectionName}: ${err}\n`);
+        log.error(`Something went wrong trying to select the ${collectionName}: ${err}\n`);
     }
 }
 
@@ -148,7 +151,7 @@ async function findByCondition(collectionName, query, dbName, database) {
         const dataManyResult = collection.find(query).toArray();
         return dataManyResult;
     } catch (err) {
-        console.error(`Something went wrong trying to select the ${collectionName}: ${err}\n`);
+        log.error(`Something went wrong trying to select the ${collectionName}: ${err}\n`);
     }
 }
 
@@ -161,7 +164,7 @@ async function findOne(collectionName, query, dbName, database) {
         const dataManyResult = collection.findOne(query);
         return dataManyResult;
     } catch (err) {
-        console.error(`Something went wrong trying to select the ${collectionName}: ${err}\n`);
+        log.error(`Something went wrong trying to select the ${collectionName}: ${err}\n`);
     }
 }
 
@@ -174,7 +177,7 @@ async function updateOneData(collectionName, dbName, query, update, options, dat
         const dataManyResult = collection.updateOne(query, update, options);
         return dataManyResult;
     } catch (err) {
-        console.error(`Something went wrong trying to update the ${collectionName}: ${err}\n`);
+        log.error(`Something went wrong trying to update the ${collectionName}: ${err}\n`);
     }
 }
 

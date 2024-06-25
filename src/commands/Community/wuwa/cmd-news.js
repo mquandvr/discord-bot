@@ -3,8 +3,11 @@ import { ChannelType } from 'discord.js';
 import { convertStrToTimetamp, convertYMDStrToTimetamp } from '../../../utils/date.js';
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { findAll, findByCondition, insertOneData, updateOneData } from '../../../database.js';
+import { findByCondition, insertOneData, updateOneData } from '../../../database.js';
 import { COLLECTION_WUWE_CHANNEL, COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
+
+import logger from "../../../utils/log.js";
+let log = logger(import.meta.filename);
 
 var aiCode = process.env.ai_code;
 const genAI = new GoogleGenerativeAI(aiCode);
@@ -48,7 +51,7 @@ const execute = async (interaction, client) => {
         const channel = interaction.options.getChannel('channel') ?? interaction.channel;
         const date = interaction.options.getString('date');
         if (date && !isNaN(new Date(date))) {
-            console.log("Error format date");
+            log.info("Error format date");
             await interaction.editReply({ content: 'Wrong format date (yyyyMMdd)!.' });
             return;
         }
@@ -62,8 +65,7 @@ const execute = async (interaction, client) => {
         }
 
     } catch (e) {
-        console.log(e);
-        await interaction.editReply({ ephemeral: false, content: 'Error!', fetchReply: true });
+        log.error(e);
     }
 }
 
@@ -71,9 +73,9 @@ const autocomplete = async () => {
 
 }
 
-const createChannel = async (channel) => {
+const createChannel = async (interaction, channel) => {
     const query = {id: channel.id};
-    const update = { $set: {id: channel.id, name: channel.name}};
+    const update = { $set: {id: channel.id, name: channel.name, serverId: interaction.guild.id, serverName: interaction.guild.name }};
     const options = {upsert: true};
     await updateOneData(COLLECTION_WUWE_CHANNEL, DATABASE_NAME_WUWE, query, update, options);
 }
@@ -87,7 +89,7 @@ const retriveContent = async (channel, date) => {
     const dateTimetamp = convertYMDStrToTimetamp(date);
     const newDate = new Date(dateTimetamp);
     newDate.setHours(0, 0, 0, 0);
-    console.log("date", newDate);
+    log.info("date", newDate);
 
     const urlArticle = "https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/ArticleMenu.json";
     const responseArticle = await fetch(urlArticle);
@@ -96,8 +98,8 @@ const retriveContent = async (channel, date) => {
     const dataArticleFilters = dataArticles
         .filter(x => convertStrToTimetamp(x.createTime) === newDate.getTime()
             && !dataPosted.some(p => p.articleId === x.articleId));
-    // console.log('dataArticleFilters', dataArticleFilters);
-    // console.log('dataPosted', dataPosted);
+    // log.info('dataArticleFilters', dataArticleFilters);
+    // log.info('dataPosted', dataPosted);
     if (dataArticleFilters && dataArticleFilters.length > 0) {
         // const dataArticle = dataArticleFilters[0];
         for (const dataArticle of dataArticleFilters) {
@@ -105,9 +107,9 @@ const retriveContent = async (channel, date) => {
 
             const responseArticleDetail = await fetch(urlArticleDetail);
             const dataArticleDetail = await responseArticleDetail.json();
-            // console.log('dataArticleDetail', dataArticleDetail)
+            // log.info('dataArticleDetail', dataArticleDetail)
             if (dataArticleDetail) {
-                // console.log('call bot');
+                // log.info('call bot');
 
                 const prompt = `Summarize the following content according to the timeline.
                 Must follow these rules:
@@ -127,7 +129,7 @@ const retriveContent = async (channel, date) => {
                 const result = await model.generateContent(prompt);
                 const responseText = result.response.text();
                 const array = responseText?.split("\n")?.filter(x => x && x.length > 0);
-                console.log(`total length data resp: ${responseText.length}`);
+                log.info(`total length data resp: ${responseText.length}`);
                 let dataMerge = "";
                 for (const [index, content] of array.entries()) {
                     if (dataMerge.length + content.length <= CONTENT_MAX_LENGTH) {
@@ -135,8 +137,8 @@ const retriveContent = async (channel, date) => {
                     }
                     
                     if (dataMerge.length + content.length > CONTENT_MAX_LENGTH || index === array.length - 1){
-                        console.log(dataMerge);
-                        console.log(`total length data sent: ${dataMerge.length}`);
+                        log.info(dataMerge);
+                        log.info(`total length data sent: ${dataMerge.length}`);
                         if (![' \n', '', '**', '\n'].includes(dataMerge)) {
                             await sleep(500);
                             await channel.send({ content: dataMerge });
@@ -148,11 +150,11 @@ const retriveContent = async (channel, date) => {
 
                 await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId, channelId: channel.id }, DATABASE_NAME_WUWE);
 
-                console.log(`data ${dataArticleDetail?.articleId} sent to ${channel.name}`);
+                log.info(`data ${dataArticleDetail?.articleId} sent to ${channel.name}`);
             }
         }
     } else {
-        console.log(`data ${newDate} not found`);
+        log.error(`data ${newDate} not found`);
     }
 };
 

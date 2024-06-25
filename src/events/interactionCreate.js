@@ -1,8 +1,10 @@
+import logger from "../utils/log.js";
+let log = logger(import.meta.filename);
 
 export default {
     name: 'interactionCreate',
     async execute(interaction, client) {
-        console.log("call interaction")
+        log.info("call interaction")
         if (interaction.isAutocomplete()) {
             const command = client.commands.get(interaction.commandName);
 
@@ -13,10 +15,10 @@ export default {
             }
 
             try {
-                console.log("run autocomplete");
+                log.info("run autocomplete");
                 await command.autocomplete(interaction, client);
             } catch (error) {
-                console.log(error);
+                log.error(error);
                 await interaction.reply({
                     content: 'There was an error while executing this command!',
                     ephemeral: true
@@ -27,14 +29,14 @@ export default {
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
 
-            if (!command) return console.log('Command was not found');
+            if (!command) return log.info('Command was not found');
 
             try {
-                console.log("run execute input command")
+                log.info("run execute input command")
                 await interaction.deferReply();
                 await command.execute(interaction, client);
             } catch (error) {
-                console.error(error);
+                log.error(error);
                 await interaction.reply({
                     content: 'There was an error while executing this command!',
                     ephemeral: true,
@@ -45,13 +47,13 @@ export default {
         if (interaction.isButton()) {
             const command = client.commands.get(interaction.commandName);
 
-            if (!command) return console.log('Command was not found');
+            if (!command) return log.info('Command was not found');
 
             try {
-                console.log("run execute button")
+                log.info("run execute button")
                 await command.execute(interaction, client);
             } catch (error) {
-                console.error(error);
+                log.error(error);
                 await interaction.reply({
                     content: 'There was an error while executing this command!',
                     ephemeral: true,

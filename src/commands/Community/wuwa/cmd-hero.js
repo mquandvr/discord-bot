@@ -4,6 +4,9 @@ import { convertDateToTimetamp } from '../../../utils/date.js';
 import { findAll, findOne } from '../../../database.js';
 import { COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_WEAPON, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
 
+import logger from "../../../utils/log.js";
+let log = logger(import.meta.filename);
+
 var domainName = process.env.domain;
 
 const data = new SlashCommandBuilder()
@@ -28,7 +31,7 @@ const autocomplete = async (interaction) => {
         //     rarity: 5,
         //     updated: '2024-06-05T17:00:00.000Z'
         // }]
-        console.log("heros", heros)
+        log.info("heros", heros)
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
         );
@@ -40,7 +43,7 @@ const autocomplete = async (interaction) => {
         });
         await interaction.respond(results.slice(0, 25));
     } catch (e) {
-        console.log(e);
+        log.error(e);
         const results = [{
             name: "Data not Found",
             value: `dt`
@@ -52,7 +55,7 @@ const autocomplete = async (interaction) => {
 const execute = async (interaction, client) => {
     try {
         const heroValue = interaction.options.getString('hero');
-        console.log("hero", heroValue);
+        log.info("hero", heroValue);
 
         const heroData = await findOne(COLLECTION_WUWE_HERO, { value: heroValue }, DATABASE_NAME_WUWE);
         // const heroData = heros.find(h => h.value === heroValue);
@@ -106,7 +109,7 @@ const execute = async (interaction, client) => {
         collector.on('collect', async i => {
             try {
                 const selectedId = parseInt(i.values[0]);
-                console.log(selectedId);
+                log.info(selectedId);
                 await i.update({ ephemeral: false, embeds: embebArr[selectedId - 1], fetchReply: true });
             } catch (e) {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
@@ -123,7 +126,7 @@ const execute = async (interaction, client) => {
         })
 
     } catch (e) {
-        console.log(e);
+        log.error(e);
         await interaction.deleteReply();
     }
 }
@@ -136,7 +139,7 @@ const createDataEmbeds = async (dataEmbeb) => {
         for (const imageName of imageNames) {
             cnt++;
             const imagePath = `${domainName}/wuwa/${dataEmbeb.data.value}/${imageName}.jpg`;
-            console.log('imagePath', imagePath);
+            log.info('imagePath', imagePath);
             dataEmbeb.imagePath = imagePath;
             const isLastRecord = cnt === imageNames.length;
             const isHeaderRecord = cnt === 1;
@@ -144,7 +147,7 @@ const createDataEmbeds = async (dataEmbeb) => {
             embedArr.push(embedTemplate);
         }
     } else {
-        console.log("image not found");
+        log.info("image not found");
         const imagePath = "https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png";
         dataEmbeb.imagePath = imagePath;
         const embedTemplate = await createEmbedTemplate(dataEmbeb);
