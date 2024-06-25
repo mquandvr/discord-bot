@@ -1,5 +1,6 @@
 import winston from "winston";
 import { getFileName } from "./path.js";
+import path from "path";
 
 const logger = winston.createLogger({
     transports: [
@@ -29,7 +30,7 @@ const logger = winston.createLogger({
 logger.exitOnError = false;
 
 function printf(options) {
-    return `${options.level}: [${options.moduleName}] ${options.message}`;
+  return `${options.level}: [${options.moduleName}] ${options.message}`;
 }
 
 export default function(fileName) {

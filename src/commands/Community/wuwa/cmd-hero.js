@@ -1,13 +1,15 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { EmbedBuilder, ActionRowBuilder, ComponentType, formatEmoji, blockQuote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 import { convertDateToTimetamp } from '../../../utils/date.js';
-import { findAll, findOne } from '../../../database.js';
-import { COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_WEAPON, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
+import { COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_WEAPON } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
+import { Connections } from '../../../db/database.js';
 let log = logger(import.meta.filename);
 
-var domainName = process.env.domain;
+const connection = new Connections();
+
+const domainName = process.env.domain;
 
 const data = new SlashCommandBuilder()
     .setName('ww-hero')
@@ -22,7 +24,8 @@ const data = new SlashCommandBuilder()
 const autocomplete = async (interaction) => {
     try {
         const focusedValue = interaction.options.getFocused();
-        const heros = await findAll(COLLECTION_WUWE_HERO, DATABASE_NAME_WUWE);
+        // const heros = await findAll(COLLECTION_WUWE_HERO, DATABASE_NAME_WUWE);
+        const heros = await connection.connectWuwa(COLLECTION_WUWE_HERO).findAll();
         // const heros = [{
         //     name: 'Rover (Havoc)',
         //     value: 'ww_rover_havoc',
@@ -31,7 +34,7 @@ const autocomplete = async (interaction) => {
         //     rarity: 5,
         //     updated: '2024-06-05T17:00:00.000Z'
         // }]
-        log.info("heros", heros)
+        log.info("heros %s", heros)
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
         );
@@ -57,15 +60,30 @@ const execute = async (interaction, client) => {
         const heroValue = interaction.options.getString('hero');
         log.info("hero", heroValue);
 
-        const heroData = await findOne(COLLECTION_WUWE_HERO, { value: heroValue }, DATABASE_NAME_WUWE);
+        // const heroData = await findOne(COLLECTION_WUWE_HERO, { value: heroValue }, DATABASE_NAME_WUWE);
+        const heroData = await connection
+            .setQuery({ value: heroValue })
+            .connectWuwa(COLLECTION_WUWE_HERO)
+            .findOne();
         // const heroData = heros.find(h => h.value === heroValue);
 
         if (!heroValue || !heroData) return await interaction.editReply({ content: 'Hero not found!' });
 
-        const fileImageData = await findAll(COLLECTION_WUWE_IMAGE, DATABASE_NAME_WUWE);
+        // const fileImageData = await findAll(COLLECTION_WUWE_IMAGE, DATABASE_NAME_WUWE);
+        const fileImageData = await connection
+            .connectWuwa(COLLECTION_WUWE_IMAGE)
+            .findAll();
 
-        const attributeData = await findOne(COLLECTION_WUWE_ATTRIBUTE, { id: heroData.attribute }, DATABASE_NAME_WUWE);
-        const weaponData = await findOne(COLLECTION_WUWE_WEAPON, { id: heroData.weapon }, DATABASE_NAME_WUWE);
+        // const attributeData = await findOne(COLLECTION_WUWE_ATTRIBUTE, { id: heroData.attribute }, DATABASE_NAME_WUWE);
+        // const weaponData = await findOne(COLLECTION_WUWE_WEAPON, { id: heroData.weapon }, DATABASE_NAME_WUWE);
+        const attributeData = await connection
+            .setQuery({ id: heroData.attribute })
+            .connectWuwa(COLLECTION_WUWE_ATTRIBUTE)
+            .findOne();
+        const weaponData = await connection
+            .setQuery({ id: heroData.weapon })
+            .connectWuwa(COLLECTION_WUWE_WEAPON)
+            .findOne();
         const attribute = attributeData ? formatEmoji(attributeData.value) : "";
         const weapon = weaponData ? formatEmoji(weaponData.value) : "";
         const rarity = `${heroData.rarity ?? ""}★`;
@@ -83,7 +101,7 @@ const execute = async (interaction, client) => {
 
         for (const imageData of fileImageData) {
             dataEmbeb.title = imageData.content;
-            dataEmbeb.imageName= imageData.data[0].image_name;
+            dataEmbeb.imageName = imageData.data[0].image_name;
 
             embebArr.push(await createDataEmbeds(dataEmbeb));
             selectArr.push(new StringSelectMenuOptionBuilder()
@@ -99,17 +117,17 @@ const execute = async (interaction, client) => {
             .addOptions(...selectArr);
 
         const row = new ActionRowBuilder()
-			.addComponents(selectRow);
-            
+            .addComponents(selectRow);
+
         const response = await interaction.editReply({ ephemeral: false, embeds: embebArr[0], components: [row], fetchReply: true });
 
-        const collectorFilter = i => i.user.id === interaction.user.id;
+        // const collectorFilter = i => i.user.id === interaction.user.id;
         // const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
         const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect });
         collector.on('collect', async i => {
             try {
                 const selectedId = parseInt(i.values[0]);
-                log.info(selectedId);
+                // log.info(selectedId);
                 await i.update({ ephemeral: false, embeds: embebArr[selectedId - 1], fetchReply: true });
             } catch (e) {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
@@ -127,7 +145,6 @@ const execute = async (interaction, client) => {
 
     } catch (e) {
         log.error(e);
-        await interaction.deleteReply();
     }
 }
 
@@ -139,7 +156,7 @@ const createDataEmbeds = async (dataEmbeb) => {
         for (const imageName of imageNames) {
             cnt++;
             const imagePath = `${domainName}/wuwa/${dataEmbeb.data.value}/${imageName}.jpg`;
-            log.info('imagePath', imagePath);
+            log.info('imagePath %s', imagePath);
             dataEmbeb.imagePath = imagePath;
             const isLastRecord = cnt === imageNames.length;
             const isHeaderRecord = cnt === 1;

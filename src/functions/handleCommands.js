@@ -38,8 +38,8 @@ export const commandHandle = async (client) => {
 
                 const data = await rest.put(
                     Routes.applicationCommands(process.env.client_id), {
-                        body: client.commandArray
-                    },
+                    body: client.commandArray
+                },
                 );
 
                 log.info(`Successfully reloaded ${data.length} application (/) commands.`);

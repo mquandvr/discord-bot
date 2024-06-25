@@ -3,13 +3,15 @@ import { ChannelType } from 'discord.js';
 import { convertStrToTimetamp, convertYMDStrToTimetamp } from '../../../utils/date.js';
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { findByCondition, insertOneData, updateOneData } from '../../../database.js';
-import { COLLECTION_WUWE_CHANNEL, COLLECTION_WUWE_NEWS, DATABASE_NAME_WUWE } from '../../../utils/constants.js';
+import { COLLECTION_WUWE_CHANNEL, COLLECTION_WUWE_NEWS } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
+import { Connections } from '../../../db/database.js';
 let log = logger(import.meta.filename);
 
-var aiCode = process.env.ai_code;
+const connection = new Connections();
+
+const aiCode = process.env.ai_code;
 const genAI = new GoogleGenerativeAI(aiCode);
 
 const generationConfig = {
@@ -74,27 +76,37 @@ const autocomplete = async () => {
 }
 
 const createChannel = async (interaction, channel) => {
-    const query = {id: channel.id};
-    const update = { $set: {id: channel.id, name: channel.name, serverId: interaction.guild.id, serverName: interaction.guild.name }};
-    const options = {upsert: true};
-    await updateOneData(COLLECTION_WUWE_CHANNEL, DATABASE_NAME_WUWE, query, update, options);
+    const query = { id: channel.id };
+    const data = { $set: { id: channel.id, name: channel.name, serverId: interaction.guild.id, serverName: interaction.guild.name } };
+    const options = { upsert: true };
+    // await updateOneData(COLLECTION_WUWE_CHANNEL, DATABASE_NAME_WUWE, query, data, options);
+    await connection
+        .setQuery(query)
+        .setData(data)
+        .setOptions(options)
+        .connectWuwa(COLLECTION_WUWE_CHANNEL)
+        .updateOneData();
 }
 
 const sendFooter = async (channel) => {
     await sleep(500);
-    await channel.send({content: '-----------------------'});
+    await channel.send({ content: '-----------------------' });
 }
 
 const retriveContent = async (channel, date) => {
     const dateTimetamp = convertYMDStrToTimetamp(date);
     const newDate = new Date(dateTimetamp);
     newDate.setHours(0, 0, 0, 0);
-    log.info("date", newDate);
+    log.info("date %s", newDate.toDateString());
 
-    const urlArticle = "https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/ArticleMenu.json";
+    const urlArticle = process.env.url_wuwa_acticle;
     const responseArticle = await fetch(urlArticle);
     const dataArticles = await responseArticle.json();
-    const dataPosted = await findByCondition(COLLECTION_WUWE_NEWS, {channelId: channel.id}, DATABASE_NAME_WUWE);
+    // const dataPosted = await findByCondition(COLLECTION_WUWE_NEWS, {channelId: channel.id}, DATABASE_NAME_WUWE);
+    const dataPosted = await connection
+        .setQuery({ channelId: channel.id })
+        .connectWuwa(COLLECTION_WUWE_NEWS)
+        .findByCondition();
     const dataArticleFilters = dataArticles
         .filter(x => convertStrToTimetamp(x.createTime) === newDate.getTime()
             && !dataPosted.some(p => p.articleId === x.articleId));
@@ -103,7 +115,7 @@ const retriveContent = async (channel, date) => {
     if (dataArticleFilters && dataArticleFilters.length > 0) {
         // const dataArticle = dataArticleFilters[0];
         for (const dataArticle of dataArticleFilters) {
-            const urlArticleDetail = `https://hw-media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/en/article/${dataArticle.articleId}.json`;
+            const urlArticleDetail = `${process.env.url_wuwa_acticle_detail}/${dataArticle.articleId}.json`;
 
             const responseArticleDetail = await fetch(urlArticleDetail);
             const dataArticleDetail = await responseArticleDetail.json();
@@ -135,9 +147,9 @@ const retriveContent = async (channel, date) => {
                     if (dataMerge.length + content.length <= CONTENT_MAX_LENGTH) {
                         dataMerge += content + "\n";
                     }
-                    
-                    if (dataMerge.length + content.length > CONTENT_MAX_LENGTH || index === array.length - 1){
-                        log.info(dataMerge);
+
+                    if (dataMerge.length + content.length > CONTENT_MAX_LENGTH || index === array.length - 1) {
+                        // log.info(dataMerge);
                         log.info(`total length data sent: ${dataMerge.length}`);
                         if (![' \n', '', '**', '\n'].includes(dataMerge)) {
                             await sleep(500);
@@ -148,13 +160,17 @@ const retriveContent = async (channel, date) => {
                 }
                 await sendFooter(channel);
 
-                await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId, channelId: channel.id }, DATABASE_NAME_WUWE);
+                // await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId, channelId: channel.id }, DATABASE_NAME_WUWE);
+                await connection
+                    .setData({ articleId: dataArticleDetail?.articleId, channelId: channel.id })
+                    .connectWuwa(COLLECTION_WUWE_NEWS)
+                    .insertOneData();
 
                 log.info(`data ${dataArticleDetail?.articleId} sent to ${channel.name}`);
             }
         }
     } else {
-        log.error(`data ${newDate} not found`);
+        log.warn(`data ${newDate.toDateString()} not found`);
     }
 };
 

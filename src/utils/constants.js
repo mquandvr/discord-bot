@@ -1,8 +1,9 @@
-export const COLLECTION_META = "meta";
-export const COLLECTION_ATTRIBUTE = "attribute";
-export const COLLECTION_HERO = "hero";
-export const COLLECTION_CLASS = "class";
-export const COLLECTION_TIER = "tier";
+export const COLLECTION_GC_META = "meta";
+export const COLLECTION_GC_ATTRIBUTE = "attribute";
+export const COLLECTION_GC_HERO = "hero";
+export const COLLECTION_GC_CLASS = "class";
+export const COLLECTION_GC_TIER = "tier";
+export const COLLECTION_GC_IMAGE = "image";
 
 export const COLLECTION_WUWE_NEWS = "news";
 export const COLLECTION_WUWE_HERO = "hero";

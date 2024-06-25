@@ -1,8 +1,4 @@
 import express from 'express';
-
-import { retrieveData } from './src/utils/fetch.js';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import * as dotenv from 'dotenv';
 
 import logger from "./src/utils/log.js";
@@ -30,22 +26,22 @@ app.use('/media', express.static(__dirname + '/assets'));
 //     }
 // });
 
-const retrieveDataMeta = async () => {
-    let url = process.env.url_meta;
+// const retrieveDataMeta = async () => {
+//     let url = process.env.url_meta;
 
-    try {
-        let data = await retrieveData(url);
-        if (data && data.data) {
-            const database = await import('./src/database.js')
-            await database.init(data.data);
-            log.info('update success!');
-        } else {
-            log.info('no data');
-        }
-    } catch (e) {
-        log.error(e);
-    }
-}
+//     try {
+//         let data = await retrieveData(url);
+//         if (data && data.data) {
+//             const database = await import('./src/database.js')
+//             await database.init(data.data);
+//             log.info('update success!');
+//         } else {
+//             log.info('no data');
+//         }
+//     } catch (e) {
+//         log.error(e);
+//     }
+// }
 
 app.use('/healthz', (req, res) => {
     res.send('healthz');
@@ -85,7 +81,7 @@ log.info('Listening on port 80');
     await meta.login();
 
     // await retrieveDataMeta();
-    
+
     const cron = await import('./src/cron/cron.js');
     cron.default(meta.client);
 })();

@@ -3,23 +3,15 @@ import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentTy
 import fs from 'fs';
 import * as Table from '../../../utils/table.js';
 import { convertDateToTimetamp } from '../../../utils/date.js';
-import { findAll, findOne } from '../../../database.js';
-import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_HERO, COLLECTION_TIER, DATABASE_NAME_GRANDCHASE } from '../../../utils/constants.js';
+import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_HERO, COLLECTION_GC_IMAGE, COLLECTION_GC_TIER } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
+import { Connections } from '../../../db/database.js';
 let log = logger(import.meta.filename);
 
-var domainName = process.env.domain;
+const domainName = process.env.domain;
 
-//import heros from '../../data/hero.json';
-// import classes from '../../data/class.json';
-// import attributes from '../../data/attribute.json';
-// import tiers from '../../data/tier.json';
-
-// let heros = await import('../../data/hero.json', {assert: { type: "json" }});
-// let classes = await import('../../data/class.json', {assert: { type: "json" }});
-// let attributes = await import('../../data/attribute.json', {assert: { type: "json" }});
-// let tiers = await import('../../data/tier.json', {assert: { type: "json" }});
+const connection = new Connections();
 
 const data = new SlashCommandBuilder()
     .setName('gc-hero')
@@ -34,10 +26,10 @@ const data = new SlashCommandBuilder()
 const autocomplete = async (interaction, client) => {
     try {
         const focusedValue = interaction.options.getFocused();
-        const heros = await findAll(COLLECTION_HERO, DATABASE_NAME_GRANDCHASE);
-        log.info("heros", heros)
+        const heros = await connection.connectGC(COLLECTION_GC_HERO).findAll();
+        log.info("heros %s", heros.length)
         const fileterChoices = heros.filter((hero) =>
-            hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
+            hero.name?.toLowerCase()?.startsWith(focusedValue?.toLowerCase())
         );
         const results = fileterChoices.map((choice, index) => {
             return {
@@ -45,7 +37,7 @@ const autocomplete = async (interaction, client) => {
                 value: choice.value ?? `v${index}`
             }
         });
-        await interaction.respond(results.slice(0, 25));
+        await interaction.respond(results?.slice(0, 25));
     } catch (e) {
         log.error(e);
         const results = [{
@@ -59,37 +51,71 @@ const autocomplete = async (interaction, client) => {
 const execute = async (interaction, client) => {
     try {
         const heroValue = interaction.options.getString('hero');
-        log.info("hero", heroValue);
+        log.info("hero %s", heroValue);
 
-        const heroData = await findOne(COLLECTION_HERO, {value: heroValue}, DATABASE_NAME_GRANDCHASE);
+        // const heroData = await findOne(COLLECTION_HERO, {value: heroValue}, DATABASE_NAME_GRANDCHASE);
+        const heroData = await connection
+            .setQuery({ value: heroValue })
+            .connectGC(COLLECTION_GC_HERO)
+            .findOne();
         // const heroData = heros.find(h => h.value === heroValue);
 
         if (!heroValue || !heroData) return await interaction.editReply({ content: 'Hero not found!' });
 
-        let fileNames = [];
-        try {
-            fileNames = fs.readdirSync(`./assets/${heroData.value}`).filter(file => file.endsWith(".jpg"));
-        } catch (e) {
-            log.warn("File image not found!");
-            fileNames = [];
-        }
-        const attributeData = await findOne(COLLECTION_ATTRIBUTE, {id: heroData.attribute}, DATABASE_NAME_GRANDCHASE);
-        const clazzData = await findOne(COLLECTION_CLASS, {id: heroData.clazz}, DATABASE_NAME_GRANDCHASE);
+        // let fileNames = [];
+        // try {
+        //     fileNames = fs.readdirSync(`./assets/${heroData.value}`).filter(file => file.endsWith(".jpg"));
+        // } catch (e) {
+        //     log.warn("File image not found!");
+        //     fileNames = [];
+        // }
+
+        // const attributeData = await findOne(COLLECTION_ATTRIBUTE, {id: heroData.attribute}, DATABASE_NAME_GRANDCHASE);
+        // const clazzData = await findOne(COLLECTION_CLASS, {id: heroData.clazz}, DATABASE_NAME_GRANDCHASE);
+        const attributeData = await connection
+            .setQuery({ id: heroData.attribute })
+            .connectGC(COLLECTION_GC_ATTRIBUTE)
+            .findOne();
+        const clazzData = await connection
+            .setQuery({ id: heroData.clazz })
+            .connectGC(COLLECTION_GC_CLASS)
+            .findOne();
         const attribute = attributeData ? formatEmoji(attributeData.value) : "";
         const clazz = clazzData ? formatEmoji(clazzData.value) : "";
         const content = heroData.content ?? "PVE";
 
+
+        const fileImageData = await connection
+            .connectGC(COLLECTION_GC_IMAGE)
+            .findAll();
         let equipFileNames = [];
         let siFileNames = [];
-        let iconFileNames = [];
-        if (fileNames && fileNames.length > 0) {
-            equipFileNames = fileNames.filter(file => file.match('(_equip)(?:[\.|\_])'));
-            siFileNames = fileNames.filter(file => file.match('(_si)(?:[\.|\_])'));
-            iconFileNames = fileNames.filter(file => file.match('(_icon)(?:[\.|\_])'));
-            // log.info("equipFileNames", equipFileNames);
+        if (fileImageData && fileImageData.length > 1) {
+            equipFileNames = fileImageData[0].data[0].image_name;
+            siFileNames = fileImageData[1].data[0].image_name;
+            // log.info("equipFileNames %s", equipFileNames);
+            // log.info("siFileNames %s", siFileNames);
         }
-        const equipEmbedArr = await createDataEmbeds(equipFileNames, 'Equipment Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
-        const siEmbedArr = await createDataEmbeds(siFileNames, 'Soul Imprint Recommendation', clazz, attribute, content, heroData, iconFileNames[0]);
+
+        let template = {
+            data: heroData,
+            title: 'Equipment Recommendation',
+            clazz: clazz,
+            attribute: attribute,
+            content: content,
+            fileNames: equipFileNames,
+        };
+        const equipEmbedArr = await createDataEmbeds(template);
+
+        template = {
+            data: heroData,
+            title: 'Soul Imprint Recommendation',
+            clazz: clazz,
+            attribute: attribute,
+            content: content,
+            fileNames: siFileNames,
+        };
+        const siEmbedArr = await createDataEmbeds(template);
 
         const equipmentBtn = new ButtonBuilder()
             .setCustomId('equipmentBtn')
@@ -152,22 +178,15 @@ const execute = async (interaction, client) => {
     }
 }
 
-const createDataEmbeds = async(fileNames, title, clazz, attribute, content, heroData, icon) => {
+const createDataEmbeds = async (template) => {
     const embedArr = [];
-    let template = {
-        data: heroData,
-        title: title,
-        clazz: clazz,
-        attribute: attribute,
-        content: content,
-        icon: icon,
-    };
     let cnt = 0;
+    const fileNames = template.fileNames.split(',');
     if (fileNames && fileNames.length > 0) {
         for (const fileName of fileNames) {
             cnt++;
-            const imagePath = `${domainName}/gc/${template.data.value}/${fileName}`;
-            log.info('imagePath', imagePath);
+            const imagePath = `${domainName}/gc/${template.data.value}/${fileName.trim()}.jpg`;
+            log.info('imagePath %s', imagePath);
             template.imagePath = imagePath;
             const isLastRecord = cnt === fileNames.length;
             const isHeaderRecord = cnt === 1;
@@ -198,7 +217,7 @@ const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
                 { name: 'Hero Name', value: `${template.data.name} ${template.clazz} ${template.attribute}`, inline: true },
                 { name: 'Content', value: `${codeBlock(contentTable)}`, inline: false },
                 { name: 'Note', value: `${blockQuote(template.data.note ?? "Updating!")}`, inline: false },
-        );
+            );
     }
     //equipEmbeb.setImage(`attachment://${fileName}`)
     equipEmbed.setImage(template.imagePath);
@@ -210,31 +229,35 @@ const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
     return equipEmbed;
 }
 
-const createContentTable = async(hero) => {
-    const tier = await findOne(COLLECTION_TIER, {hero: hero}, DATABASE_NAME_GRANDCHASE);
+const createContentTable = async (hero) => {
+    // const tier = await findOne(COLLECTION_TIER, {hero: hero}, DATABASE_NAME_GRANDCHASE);
+    const tier = await connection
+        .setQuery({ hero: hero })
+        .connectGC(COLLECTION_GC_TIER)
+        .findOne();
 
     if (!tier) return "Updating!";
-    
+
     const columns = [
         {
-          width: 13,
-          label: 'Content',
-          index: 0,
-          field: 'content',
+            width: 13,
+            label: 'Content',
+            index: 0,
+            field: 'content',
         },
         {
-          width: 20,
-          label: 'Phase',
-          index: 1,
-          field: 'phase',
+            width: 15,
+            label: 'Phase',
+            index: 1,
+            field: 'phase',
         },
         {
-          width: 7,
-          label: 'Rank',
-          index: 2,
-          field: 'rank',
+            width: 7,
+            label: 'Rank',
+            index: 2,
+            field: 'rank',
         },
-      ];
+    ];
     const table = new Table.TableBuilder(columns);
     tier.data.forEach(t => {
         table.addRows(t);

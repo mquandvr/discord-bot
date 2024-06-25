@@ -1,10 +1,12 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, codeBlock, formatEmoji } from 'discord.js';
-import { findAll, findOne } from '../../../database.js';
-import { COLLECTION_ATTRIBUTE, COLLECTION_CLASS, COLLECTION_META, DATABASE_NAME_GRANDCHASE } from '../../../utils/constants.js';
+import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_META } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
+import { Connections } from '../../../db/database.js';
 let log = logger(import.meta.filename);
+
+const connection = new Connections();
 
 // let metas = await import('../../data/meta.json', {assert: { type: "json" }});
 // let classes = await import('../../data/class.json', {assert: { type: "json" }});
@@ -39,7 +41,9 @@ const autocomplete = async (interaction, client) => {
         // log.info("content", content);
         // log.info("phase", phase);
 
-        const metas = await findAll(COLLECTION_META, DATABASE_NAME_GRANDCHASE);
+        const metas = await connection
+            .connectGC(COLLECTION_GC_META)
+            .findAll();
 
         if (phase !== null) {
             metaFileterChoices = metas?.filter((meta) =>
@@ -62,10 +66,10 @@ const autocomplete = async (interaction, client) => {
             };
         });
 
-        log.info("results", results)
-        await interaction.respond(results);
+        // log.info("results", results);
+        await interaction.respond(results.slice(0, 25));
     } catch (e) {
-        log.error(e)
+        log.error(e);
         const results = [{
             name: "Data not Found",
             value: `v0`
@@ -81,7 +85,10 @@ const execute = async (interaction, client) => {
         const phaseValue = interaction.options.getString('phase');
         log.info("content %s phase %s", contentValue, phaseValue);
 
-        let metaData = await findOne(COLLECTION_META, {value: contentValue}, DATABASE_NAME_GRANDCHASE);
+        let metaData = await connection
+            .setQuery({ value: contentValue })
+            .connectGC(COLLECTION_GC_META)
+            .findOne();
         // let metaData = metas?.find(h => h?.value === contentValue);
 
         if (!contentValue || !metaData || !metaData.data) return await interaction.editReply({ content: 'Meta not found!' });
@@ -106,8 +113,10 @@ const execute = async (interaction, client) => {
 
         let content = "";
         const dataSlice = phaseDatas.length > MAX_RECORD_OF_PAGE ? phaseDatas.slice(0, MAX_RECORD_OF_PAGE) : phaseDatas;
-        const attributes = await findAll(COLLECTION_ATTRIBUTE, DATABASE_NAME_GRANDCHASE);
-        const classes = await findAll(COLLECTION_CLASS, DATABASE_NAME_GRANDCHASE);
+        // const attributes = await findAll(COLLECTION_ATTRIBUTE, DATABASE_NAME_GRANDCHASE);
+        // const classes = await findAll(COLLECTION_CLASS, DATABASE_NAME_GRANDCHASE);
+        const attributes = await connection.connectGC(COLLECTION_GC_ATTRIBUTE).findAll();
+        const classes = await connection.connectGC(COLLECTION_GC_CLASS).findAll();
         for (const phase of dataSlice) {
             if (phaseValue && phaseValue !== phase?.value) {
                 continue;

@@ -11,7 +11,7 @@ export default {
             if (!command) return;
 
             if (!command.autocomplete) {
-                return console.error('No autocomplete handler was found');
+                return log.error('No autocomplete handler was found');
             }
 
             try {
