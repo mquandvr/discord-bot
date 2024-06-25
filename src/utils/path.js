@@ -1,5 +1,9 @@
+import path from "path";
+
 function getFileName(url) {
-    return url.substring(30);
+    const fileName = path.basename(url);
+    const relativePath = path.relative(url, fileName);
+    return relativePath ? relativePath : fileName;
 }
 
 export { getFileName };
