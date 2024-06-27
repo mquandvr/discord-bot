@@ -10,14 +10,18 @@ const connection = new ConnectionWuwa();
 const createScheduleWWNews = async (client) => {
     // run 1 time / 1 hour
     schedule.scheduleJob('0 */1 * * *', async () => {
-        const channels = await connection.setCollection(COLLECTION_WUWE_CHANNEL).findAll();
-        if (!channels || channels.length === 0) {
-            log.info("channels not found!");
-        } else {
-            channels.forEach(async c => {
-                const channel = client.channels.cache.get(c.id);
-                await retriveContent(channel);
-            });
+        try {
+            const channels = await connection.setCollection(COLLECTION_WUWE_CHANNEL).findAll();
+            if (!channels || channels.length === 0) {
+                log.info("channels not found!");
+            } else {
+                channels.forEach(async c => {
+                    const channel = client.channels.cache.get(c.id);
+                    await retriveContent(channel);
+                });
+            }
+        } catch (e) {
+            log.error(`Error execute schedule wuwa news: ${e}`);
         }
     });
 }

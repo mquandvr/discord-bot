@@ -85,14 +85,15 @@ const execute = async (interaction, client) => {
         const content = heroData.content ?? "PVE";
 
 
-        const fileImageData = await connection
-            .setCollection(COLLECTION_GC_IMAGE)
-            .findAll();
+        // const fileImageData = await connection
+        //     .setCollection(COLLECTION_GC_IMAGE)
+        //     .findAll();
         let equipFileNames = [];
         let siFileNames = [];
-        if (fileImageData && fileImageData.length > 1) {
-            equipFileNames = fileImageData[0].data[0].image_name;
-            siFileNames = fileImageData[1].data[0].image_name;
+        if (heroData.image) {
+            const heroImages = heroData.image.split(',');
+            equipFileNames = heroImages.filter(x => x.indexOf('equip') >= 0);
+            siFileNames = heroImages.filter(x => x.indexOf('si') >= 0);
             // log.info("equipFileNames %s", equipFileNames);
             // log.info("siFileNames %s", siFileNames);
         }
@@ -162,7 +163,7 @@ const execute = async (interaction, client) => {
                     await i.update({ components: [] });
                 }
             } catch (e) {
-                log.error('error selected %s', e);
+                log.error(`Error selected button gc hero: ${e}`);
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
         })
@@ -171,18 +172,18 @@ const execute = async (interaction, client) => {
             try {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
-                log.error(e);
+                log.error(`Error end button gc hero: ${e}`);
             }
         })
 
     } catch (e) {
-        log.error(e);
+        log.error(`Error execute gc hero: ${e}`);
     }
 }
 
 const createDataEmbeds = async (template) => {
     const embedArr = [];
-    const fileNames = template.fileNames.split(',');
+    const fileNames = template.fileNames;
     if (fileNames && fileNames.length > 0) {
         for (const [index, fileName] of fileNames.entries()) {
             const imagePath = `${domainName}/gc/${template.data.value}/${fileName.trim()}.jpg`;

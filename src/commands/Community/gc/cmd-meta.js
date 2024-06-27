@@ -69,7 +69,7 @@ const autocomplete = async (interaction, client) => {
         // log.info("results", results);
         await interaction.respond(results.slice(0, 25));
     } catch (e) {
-        log.error(e);
+        log.error(`Error autocomplete gc: ${e}`);
         const results = [{
             name: "Data not Found",
             value: `v0`
@@ -198,7 +198,7 @@ const execute = async (interaction, client) => {
         }
 
     } catch (e) {
-        log.error(e);
+        log.error(`Error execute gc meta: ${e}`);
     }
 }
 

@@ -130,7 +130,7 @@ const execute = async (interaction, client) => {
         const row = new ActionRowBuilder()
             .addComponents(selectRow);
 
-        const response = await interaction.editReply({ ephemeral: false, embeds: embebArr[0], components: [row], fetchReply: true });
+        const response = await interaction.editReply({ embeds: embebArr[0], components: [row] });
 
         // const collectorFilter = i => i.user.id === interaction.user.id;
         // const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
@@ -144,9 +144,9 @@ const execute = async (interaction, client) => {
                 );
 
                 // log.info(selectedId);
-                await i.update({ ephemeral: false, embeds: embebArr[selectedId - 1], components: [row], fetchReply: true });
+                await i.update({ embeds: embebArr[selectedId - 1], components: [row] });
             } catch (e) {
-                log.error(`error selected %s`, e);
+                log.error(`Error select wuwa: ${e}`);
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
         })
@@ -155,14 +155,13 @@ const execute = async (interaction, client) => {
             try {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
-                log.error(e);
+                log.error(`Error end select wuwa: ${e}`);
                 await interaction.deleteReply();
             }
         })
 
     } catch (e) {
-        log.error(e);
-        await interaction.deleteReply();
+        log.error(`Error execute wuwa hero: ${e}`);
     }
 }
 

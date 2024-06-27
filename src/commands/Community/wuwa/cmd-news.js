@@ -67,7 +67,7 @@ const execute = async (interaction, client) => {
         }
 
     } catch (e) {
-        log.error(e);
+        log.error(`Error execute wuwa news: ${e}`);
     }
 }
 
