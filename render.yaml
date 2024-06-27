@@ -3,5 +3,6 @@ services:
     name: gcm-bot
     runtime: node
     plan: starter
-    startCommand: "npm start"
+    buildCommand: "npm run build"
+    startCommand: "npm run start"
     healthCheckPath: /healthz
