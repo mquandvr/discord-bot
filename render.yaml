@@ -3,3 +3,4 @@ services:
     name: gcm-bot
     runtime: node
     plan: starter
+    startCommand: "npm start"
