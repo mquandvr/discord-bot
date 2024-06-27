@@ -3,10 +3,10 @@ import { ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, bold, code
 import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_META } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
-import { Connections } from '../../../db/database.js';
-let log = logger(import.meta.filename);
+import ConnectionGC from '../../../db/databaseGC.js';
+const log = logger(import.meta.filename);
 
-const connection = new Connections();
+const connection = new ConnectionGC();
 
 // let metas = await import('../../data/meta.json', {assert: { type: "json" }});
 // let classes = await import('../../data/class.json', {assert: { type: "json" }});
@@ -42,7 +42,7 @@ const autocomplete = async (interaction, client) => {
         // log.info("phase", phase);
 
         const metas = await connection
-            .connectGC(COLLECTION_GC_META)
+            .setCollection(COLLECTION_GC_META)
             .findAll();
 
         if (phase !== null) {
@@ -87,7 +87,7 @@ const execute = async (interaction, client) => {
 
         let metaData = await connection
             .setQuery({ value: contentValue })
-            .connectGC(COLLECTION_GC_META)
+            .setCollection(COLLECTION_GC_META)
             .findOne();
         // let metaData = metas?.find(h => h?.value === contentValue);
 
@@ -115,8 +115,8 @@ const execute = async (interaction, client) => {
         const dataSlice = phaseDatas.length > MAX_RECORD_OF_PAGE ? phaseDatas.slice(0, MAX_RECORD_OF_PAGE) : phaseDatas;
         // const attributes = await findAll(COLLECTION_ATTRIBUTE, DATABASE_NAME_GRANDCHASE);
         // const classes = await findAll(COLLECTION_CLASS, DATABASE_NAME_GRANDCHASE);
-        const attributes = await connection.connectGC(COLLECTION_GC_ATTRIBUTE).findAll();
-        const classes = await connection.connectGC(COLLECTION_GC_CLASS).findAll();
+        const attributes = await connection.setCollection(COLLECTION_GC_ATTRIBUTE).findAll();
+        const classes = await connection.setCollection(COLLECTION_GC_CLASS).findAll();
         for (const phase of dataSlice) {
             if (phaseValue && phaseValue !== phase?.value) {
                 continue;

@@ -1,6 +1,5 @@
 import winston from "winston";
 import { getFileName } from "./path.js";
-import path from "path";
 
 const logger = winston.createLogger({
     transports: [
@@ -8,8 +7,10 @@ const logger = winston.createLogger({
         level: 'info',
         format: winston.format.combine(
           winston.format.colorize(),
-          winston.format.simple(),
+          winston.format.align(),
           winston.format.splat(),
+          winston.format.json(),
+          winston.format.prettyPrint(JSON.stringify),
           winston.format.printf(options => printf(options)),
         )
       })
@@ -19,8 +20,9 @@ const logger = winston.createLogger({
             level: 'error',
             format: winston.format.combine(
               winston.format.colorize(),
-              winston.format.simple(),
               winston.format.splat(),
+              winston.format.json(),
+              winston.format.prettyPrint(JSON.stringify),
               winston.format.printf(options => printf(options)),
             )
         })

@@ -2,12 +2,11 @@ import { MongoClient } from "mongodb";
 import { DATABASE_NAME_WUWE, DATABASE_NAME_GRANDCHASE } from "../utils/constants.js";
 
 import logger from "../utils/log.js";
-let log = logger(import.meta.filename);
+const log = logger(import.meta.filename);
 
 const uri = process.env.db_uri;
 
-// The MongoClient is the object that references the connection to our
-// datastore (Atlas, for example)
+// The MongoClient is the object that references the connection to our datastore
 class Connections {
     database = null;
     client = null;
@@ -38,16 +37,8 @@ class Connections {
         return this;
     }
 
-    connectGC(collectionNm) {
+    setCollection(collectionNm) {
         this.collectionNm = collectionNm;
-        this.database = this.client.db(DATABASE_NAME_GRANDCHASE);
-        this.collection = this.database.collection(this.collectionNm);
-        return this;
-    }
-
-    connectWuwa(collectionNm) {
-        this.collectionNm = collectionNm;
-        this.database = this.client.db(DATABASE_NAME_WUWE);
         this.collection = this.database.collection(this.collectionNm);
         return this;
     }
@@ -119,4 +110,4 @@ class Connections {
     }
 }
 
-export { Connections }
+export default Connections;

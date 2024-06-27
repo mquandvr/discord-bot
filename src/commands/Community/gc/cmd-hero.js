@@ -6,12 +6,12 @@ import { convertDateToTimetamp } from '../../../utils/date.js';
 import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_HERO, COLLECTION_GC_IMAGE, COLLECTION_GC_TIER } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
-import { Connections } from '../../../db/database.js';
-let log = logger(import.meta.filename);
+import ConnectionGC from '../../../db/databaseGC.js';
+const log = logger(import.meta.filename);
 
 const domainName = process.env.domain;
 
-const connection = new Connections();
+const connection = new ConnectionGC();
 
 const data = new SlashCommandBuilder()
     .setName('gc-hero')
@@ -26,7 +26,7 @@ const data = new SlashCommandBuilder()
 const autocomplete = async (interaction, client) => {
     try {
         const focusedValue = interaction.options.getFocused();
-        const heros = await connection.connectGC(COLLECTION_GC_HERO).findAll();
+        const heros = await connection.setCollection(COLLECTION_GC_HERO).findAll();
         log.info("heros %s", heros.length)
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase()?.startsWith(focusedValue?.toLowerCase())
@@ -56,7 +56,7 @@ const execute = async (interaction, client) => {
         // const heroData = await findOne(COLLECTION_HERO, {value: heroValue}, DATABASE_NAME_GRANDCHASE);
         const heroData = await connection
             .setQuery({ value: heroValue })
-            .connectGC(COLLECTION_GC_HERO)
+            .setCollection(COLLECTION_GC_HERO)
             .findOne();
         // const heroData = heros.find(h => h.value === heroValue);
 
@@ -74,11 +74,11 @@ const execute = async (interaction, client) => {
         // const clazzData = await findOne(COLLECTION_CLASS, {id: heroData.clazz}, DATABASE_NAME_GRANDCHASE);
         const attributeData = await connection
             .setQuery({ id: heroData.attribute })
-            .connectGC(COLLECTION_GC_ATTRIBUTE)
+            .setCollection(COLLECTION_GC_ATTRIBUTE)
             .findOne();
         const clazzData = await connection
             .setQuery({ id: heroData.clazz })
-            .connectGC(COLLECTION_GC_CLASS)
+            .setCollection(COLLECTION_GC_CLASS)
             .findOne();
         const attribute = attributeData ? formatEmoji(attributeData.value) : "";
         const clazz = clazzData ? formatEmoji(clazzData.value) : "";
@@ -86,7 +86,7 @@ const execute = async (interaction, client) => {
 
 
         const fileImageData = await connection
-            .connectGC(COLLECTION_GC_IMAGE)
+            .setCollection(COLLECTION_GC_IMAGE)
             .findAll();
         let equipFileNames = [];
         let siFileNames = [];
@@ -136,31 +136,33 @@ const execute = async (interaction, client) => {
         //await interaction.reply({ ephemeral: true, content: 'Loading...!' });
         //await channel.send({ embeds: embed, files: file });
         //await interaction.deleteReply();
-        const response = await interaction.editReply({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
+        const response = await interaction.editReply({ embeds: equipEmbedArr, components: [row] });
         //const collectorFilter = i => i.user.id === interaction.user.id;
 
         //const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
         const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
         collector.on('collect', async i => {
             try {
-                const selectedId = i.customId
+                const selectedId = i.customId;
+                log.info(`selected button: ${selectedId}`);
                 const collectorFilter = i => i.user.id === interaction.user.id;
                 if (collectorFilter) {
                     if (selectedId === 'equipmentBtn') {
                         equipmentBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
                         siBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
 
-                        await i.update({ ephemeral: false, embeds: equipEmbedArr, components: [row], fetchReply: true });
+                        await i.update({ embeds: equipEmbedArr, components: [row] });
                     } else if (selectedId === 'siBtn') {
                         equipmentBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
                         siBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
 
-                        await i.update({ ephemeral: false, embeds: siEmbedArr, components: [row], fetchReply: true });
+                        await i.update({ embeds: siEmbedArr, components: [row] });
                     }
                 } else {
                     await i.update({ components: [] });
                 }
             } catch (e) {
+                log.error('error selected %s', e);
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
         })
@@ -180,24 +182,19 @@ const execute = async (interaction, client) => {
 
 const createDataEmbeds = async (template) => {
     const embedArr = [];
-    let cnt = 0;
     const fileNames = template.fileNames.split(',');
     if (fileNames && fileNames.length > 0) {
-        for (const fileName of fileNames) {
-            cnt++;
+        for (const [index, fileName] of fileNames.entries()) {
             const imagePath = `${domainName}/gc/${template.data.value}/${fileName.trim()}.jpg`;
-            log.info('imagePath %s', imagePath);
+            // log.info('imagePath %s', imagePath);
             template.imagePath = imagePath;
-            const isLastRecord = cnt === fileNames.length;
-            const isHeaderRecord = cnt === 1;
+            const isLastRecord = index === fileNames.length - 1;
+            const isHeaderRecord = index === 0;
             const embedTemplate = await createEmbedTemplate(template, isLastRecord, isHeaderRecord);
             embedArr.push(embedTemplate);
         }
     } else {
-        log.info("image not found");
-        const imagePath = "https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png";
-        const embedTemplate = await createEmbedTemplate(template, imagePath);
-        embedArr.push(embedTemplate);
+        log.error("image not found");
     }
 
     return embedArr;
@@ -207,8 +204,7 @@ const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
     //let fileImage = new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`);
     //file.push(new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`));
     //log.info(imagePath);
-    const equipEmbed = new EmbedBuilder()
-        .setColor(0x0099FF);
+    const equipEmbed = new EmbedBuilder();
     if (isHeaderRecord) {
         const contentTable = await createContentTable(template.data.value);
         equipEmbed.setTitle(template.title)
@@ -226,14 +222,14 @@ const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
             .setTimestamp(convertDateToTimetamp(template.data.updated))
             .setFooter({ text: 'Last updated' });
     }
-    return equipEmbed;
+    return equipEmbed.setColor('Random');
 }
 
 const createContentTable = async (hero) => {
     // const tier = await findOne(COLLECTION_TIER, {hero: hero}, DATABASE_NAME_GRANDCHASE);
     const tier = await connection
         .setQuery({ hero: hero })
-        .connectGC(COLLECTION_GC_TIER)
+        .setCollection(COLLECTION_GC_TIER)
         .findOne();
 
     if (!tier) return "Updating!";

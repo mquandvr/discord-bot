@@ -6,10 +6,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { COLLECTION_WUWE_CHANNEL, COLLECTION_WUWE_NEWS } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
-import { Connections } from '../../../db/database.js';
-let log = logger(import.meta.filename);
+import ConnectionWuwa from '../../../db/databaseWuwa.js';
+const log = logger(import.meta.filename);
 
-const connection = new Connections();
+const connection = new ConnectionWuwa();
 
 const aiCode = process.env.ai_code;
 const genAI = new GoogleGenerativeAI(aiCode);
@@ -84,7 +84,7 @@ const createChannel = async (interaction, channel) => {
         .setQuery(query)
         .setData(data)
         .setOptions(options)
-        .connectWuwa(COLLECTION_WUWE_CHANNEL)
+        .setCollection(COLLECTION_WUWE_CHANNEL)
         .updateOneData();
 }
 
@@ -105,7 +105,7 @@ const retriveContent = async (channel, date) => {
     // const dataPosted = await findByCondition(COLLECTION_WUWE_NEWS, {channelId: channel.id}, DATABASE_NAME_WUWE);
     const dataPosted = await connection
         .setQuery({ channelId: channel.id })
-        .connectWuwa(COLLECTION_WUWE_NEWS)
+        .setCollection(COLLECTION_WUWE_NEWS)
         .findByCondition();
     const dataArticleFilters = dataArticles
         .filter(x => convertStrToTimetamp(x.createTime) === newDate.getTime()
@@ -163,7 +163,7 @@ const retriveContent = async (channel, date) => {
                 // await insertOneData(COLLECTION_WUWE_NEWS, { articleId: dataArticleDetail?.articleId, channelId: channel.id }, DATABASE_NAME_WUWE);
                 await connection
                     .setData({ articleId: dataArticleDetail?.articleId, channelId: channel.id })
-                    .connectWuwa(COLLECTION_WUWE_NEWS)
+                    .setCollection(COLLECTION_WUWE_NEWS)
                     .insertOneData();
 
                 log.info(`data ${dataArticleDetail?.articleId} sent to ${channel.name}`);

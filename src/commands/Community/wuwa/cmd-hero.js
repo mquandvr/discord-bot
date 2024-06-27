@@ -4,10 +4,10 @@ import { convertDateToTimetamp } from '../../../utils/date.js';
 import { COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_WEAPON } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
-import { Connections } from '../../../db/database.js';
-let log = logger(import.meta.filename);
+import ConnectionWuwa from '../../../db/databaseWuwa.js';
+const log = logger(import.meta.filename);
 
-const connection = new Connections();
+const connection = new ConnectionWuwa();
 
 const domainName = process.env.domain;
 
@@ -25,7 +25,7 @@ const autocomplete = async (interaction) => {
     try {
         const focusedValue = interaction.options.getFocused();
         // const heros = await findAll(COLLECTION_WUWE_HERO, DATABASE_NAME_WUWE);
-        const heros = await connection.connectWuwa(COLLECTION_WUWE_HERO).findAll();
+        const heros = await connection.setCollection(COLLECTION_WUWE_HERO).findAll();
         // const heros = [{
         //     name: 'Rover (Havoc)',
         //     value: 'ww_rover_havoc',
@@ -34,7 +34,7 @@ const autocomplete = async (interaction) => {
         //     rarity: 5,
         //     updated: '2024-06-05T17:00:00.000Z'
         // }]
-        log.info("heros %s", heros)
+        log.info("heros %s", heros.length);
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase().startsWith(focusedValue?.toLowerCase())
         );
@@ -63,7 +63,7 @@ const execute = async (interaction, client) => {
         // const heroData = await findOne(COLLECTION_WUWE_HERO, { value: heroValue }, DATABASE_NAME_WUWE);
         const heroData = await connection
             .setQuery({ value: heroValue })
-            .connectWuwa(COLLECTION_WUWE_HERO)
+            .setCollection(COLLECTION_WUWE_HERO)
             .findOne();
         // const heroData = heros.find(h => h.value === heroValue);
 
@@ -71,26 +71,25 @@ const execute = async (interaction, client) => {
 
         // const fileImageData = await findAll(COLLECTION_WUWE_IMAGE, DATABASE_NAME_WUWE);
         const fileImageData = await connection
-            .connectWuwa(COLLECTION_WUWE_IMAGE)
+            .setCollection(COLLECTION_WUWE_IMAGE)
             .findAll();
 
         // const attributeData = await findOne(COLLECTION_WUWE_ATTRIBUTE, { id: heroData.attribute }, DATABASE_NAME_WUWE);
         // const weaponData = await findOne(COLLECTION_WUWE_WEAPON, { id: heroData.weapon }, DATABASE_NAME_WUWE);
         const attributeData = await connection
             .setQuery({ id: heroData.attribute })
-            .connectWuwa(COLLECTION_WUWE_ATTRIBUTE)
+            .setCollection(COLLECTION_WUWE_ATTRIBUTE)
             .findOne();
         const weaponData = await connection
             .setQuery({ id: heroData.weapon })
-            .connectWuwa(COLLECTION_WUWE_WEAPON)
+            .setCollection(COLLECTION_WUWE_WEAPON)
             .findOne();
         const attribute = attributeData ? formatEmoji(attributeData.value) : "";
         const weapon = weaponData ? formatEmoji(weaponData.value) : "";
         const rarity = `${heroData.rarity ?? ""}★`;
 
-        let count = 0;
-        const embebArr = [];
-        const selectArr = [];
+        // const embebArr = [];
+        // const selectArr = [];
 
         const dataEmbeb = {
             data: heroData,
@@ -99,17 +98,29 @@ const execute = async (interaction, client) => {
             rarity: rarity,
         };
 
-        for (const imageData of fileImageData) {
+        // for (const [index, imageData] of fileImageData.entries()) {
+        //     dataEmbeb.title = imageData.content;
+        //     dataEmbeb.imageName = imageData.data[0].image_name;
+
+        //     // embebArr.push(await createDataEmbeds(dataEmbeb));
+        //     selectArr.push(new StringSelectMenuOptionBuilder()
+        //         .setLabel(imageData.content)
+        //         .setValue(`${index + 1}`)
+        //         .setDefault(index == 0 ? true : false)
+        //     );
+        // }
+
+        const embebArr = fileImageData.map((imageData) => {
             dataEmbeb.title = imageData.content;
             dataEmbeb.imageName = imageData.data[0].image_name;
+            return createDataEmbeds(dataEmbeb);
+        })
 
-            embebArr.push(await createDataEmbeds(dataEmbeb));
-            selectArr.push(new StringSelectMenuOptionBuilder()
+        const selectArr = fileImageData.map((imageData, index) => {
+            return new StringSelectMenuOptionBuilder()
                 .setLabel(imageData.content)
-                .setValue(`${++count}`)
-                // .setDefault(count == 1 ? true : false)
-            );
-        }
+                .setValue(`${index + 1}`)
+                .setDefault(index === 0 ? true : false)});
 
         const selectRow = new StringSelectMenuBuilder()
             .setCustomId('starter')
@@ -126,10 +137,16 @@ const execute = async (interaction, client) => {
         const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect });
         collector.on('collect', async i => {
             try {
-                const selectedId = parseInt(i.values[0]);
+                const selectedId = i.values[0];
+
+                row.components[0].options.map((option) => 
+                    option.data.value === selectedId ? option.setDefault(true) : option.setDefault(false)
+                );
+
                 // log.info(selectedId);
-                await i.update({ ephemeral: false, embeds: embebArr[selectedId - 1], fetchReply: true });
+                await i.update({ ephemeral: false, embeds: embebArr[selectedId - 1], components: [row], fetchReply: true });
             } catch (e) {
+                log.error(`error selected %s`, e);
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
         })
@@ -138,45 +155,38 @@ const execute = async (interaction, client) => {
             try {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
-                console.error(e);
+                log.error(e);
                 await interaction.deleteReply();
             }
         })
 
     } catch (e) {
         log.error(e);
+        await interaction.deleteReply();
     }
 }
 
-const createDataEmbeds = async (dataEmbeb) => {
-    const embedArr = [];
-    let cnt = 0;
+const createDataEmbeds = (dataEmbeb) => {
+    let embedArr = [];
     const imageNames = dataEmbeb.imageName.split(',');
     if (imageNames && imageNames.length > 0) {
-        for (const imageName of imageNames) {
-            cnt++;
+        embedArr = imageNames.map((imageName, index) => {
             const imagePath = `${domainName}/wuwa/${dataEmbeb.data.value}/${imageName}.jpg`;
-            log.info('imagePath %s', imagePath);
+            // log.info('imagePath %s', imagePath);
             dataEmbeb.imagePath = imagePath;
-            const isLastRecord = cnt === imageNames.length;
-            const isHeaderRecord = cnt === 1;
-            const embedTemplate = await createEmbedTemplate(dataEmbeb, isLastRecord, isHeaderRecord);
-            embedArr.push(embedTemplate);
-        }
+            const isLastRecord = index === imageNames.length - 1;
+            const isHeaderRecord = index === 0;
+            return createEmbedTemplate(dataEmbeb, isLastRecord, isHeaderRecord);
+        });
     } else {
-        log.info("image not found");
-        const imagePath = "https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled-1150x647.png";
-        dataEmbeb.imagePath = imagePath;
-        const embedTemplate = await createEmbedTemplate(dataEmbeb);
-        embedArr.push(embedTemplate);
+        log.warn("image not found");
     }
 
     return embedArr;
 }
 
-const createEmbedTemplate = async (template, isLastRecord = true, isHeaderRecord = true) => {
-    const equipEmbed = new EmbedBuilder()
-        .setColor(0x0099FF);
+const createEmbedTemplate = (template, isLastRecord = true, isHeaderRecord = true) => {
+    const equipEmbed = new EmbedBuilder();
     if (isHeaderRecord) {
         equipEmbed.setTitle(`${template.data.name}`)
             .addFields(
@@ -186,6 +196,7 @@ const createEmbedTemplate = async (template, isLastRecord = true, isHeaderRecord
                 { name: 'Copyright', value: `${blockQuote(`@wutheringwave.id`)}`, inline: false },
             );
     }
+    // log.info('imagePath %s', template.imagePath);
     equipEmbed.setImage(template.imagePath);
     if (isLastRecord) {
         equipEmbed
