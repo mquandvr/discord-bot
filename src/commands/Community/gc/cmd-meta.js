@@ -98,19 +98,6 @@ const execute = async (interaction, client) => {
             phaseDatas = [metaData.data?.find(p => p.value === phaseValue)];
         }
 
-        // let iconHeros = [];
-        // phaseDatas.forEach(phase => {
-        //     const key = phase.key;
-        //     const filterHeros = key.match(/^([^_]+)_([^_]+)_([^_]+)_([^_]+)/);
-        //     if (filterHeros) {
-        //         const heroNames = filterHeros.slice(1, 5);
-        //         iconHeros = heros.filter(h => heroNames.includes(h.name))
-        //                                 .map(h => `${domainName}/${h.value}/gc_ai_icon.jpg`);
-        //         log.info('icon heros', iconHeros)
-        //     }
-        //     phase.iconHeros = iconHeros;
-        // });
-
         let content = "";
         const dataSlice = phaseDatas.length > MAX_RECORD_OF_PAGE ? phaseDatas.slice(0, MAX_RECORD_OF_PAGE) : phaseDatas;
         // const attributes = await findAll(COLLECTION_ATTRIBUTE, DATABASE_NAME_GRANDCHASE);
@@ -131,27 +118,20 @@ const execute = async (interaction, client) => {
         content = `# ${metaData?.name} \r ${content}`;
 
         // PAGINATION
-        let row = new ActionRowBuilder();
         const numberOfPagination = Math.ceil(phaseDatas?.length / Number.parseInt(MAX_RECORD_OF_PAGE));
         //if (numberOfPagination > 1) {
-        for (let index = 0; index < numberOfPagination; index++) {
-            let record = index + 1;
-            const pagiX = new ButtonBuilder()
-                .setCustomId(`${record}`)
-                .setLabel(`${record}`)
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(false);
-            if (record === 1) {
-                pagiX.setStyle(ButtonStyle.Primary)
-                    .setDisabled(true);
-            }
-            row.addComponents(pagiX);
-        }
-        //}
+        const components = [...Array(numberOfPagination)].map((_, index) => {
+            return new ButtonBuilder()
+                .setCustomId(`id${index + 1}`)
+                .setLabel(`${index + 1}`)
+                .setStyle(index === 0 ? ButtonStyle.Primary : ButtonStyle.Secondary)
+                .setDisabled(index === 0);
+        });
+        const row = new ActionRowBuilder()
+            .addComponents(...components);
 
-        let response;
         if (numberOfPagination > 1) {
-            response = await interaction.editReply({ ephemeral: false, content: content, components: [row], fetchReply: true });
+            const response = await interaction.editReply({ content: content, components: [row] });
 
             //const collectorFilter = i => i.user.id === interaction.user.id;
 
@@ -196,7 +176,7 @@ const execute = async (interaction, client) => {
                             row.addComponents(pagiX);
                         }
 
-                        await i.update({ ephemeral: false, content: content, components: [row], fetchReply: true });
+                        await i.update({ content: content, components: [row] });
                     } else {
                         await i.update({ components: [] });
                     }
@@ -214,7 +194,7 @@ const execute = async (interaction, client) => {
                 }
             })
         } else {
-            await interaction.editReply({ ephemeral: false, content: content, fetchReply: false });
+            await interaction.editReply({ content: content });
         }
 
     } catch (e) {
@@ -234,14 +214,19 @@ const dataTemplate = (data, attributes, classes) => {
 
 const dataSubTemplete = (dataSub, attributes, classes) => {
     const dataSubArr = dataSub.split(',');
-    let dataConvertArr = [];
-    for (let index = 0; index < dataSubArr.length; index++) {
+    const dataConvertArr = [...Array(dataSubArr.length)].map((_, index) => {
         const attribute = attributes.filter(x => x.id === dataSubArr[index])[0];
         const clazz = classes.filter(x => x.id === dataSubArr[index])[0];
         let emojiCd = attribute?.value ?? clazz?.value;
-        let emojiKey = emojiCd ? formatEmoji(emojiCd) : dataSubArr[index];
-        dataConvertArr.push(emojiKey);
-    }
+        return emojiCd ? formatEmoji(emojiCd) : dataSubArr[index];
+    });
+    // for (let index = 0; index < dataSubArr.length; index++) {
+    //     const attribute = attributes.filter(x => x.id === dataSubArr[index])[0];
+    //     const clazz = classes.filter(x => x.id === dataSubArr[index])[0];
+    //     let emojiCd = attribute?.value ?? clazz?.value;
+    //     let emojiKey = emojiCd ? formatEmoji(emojiCd) : dataSubArr[index];
+    //     dataConvertArr.push(emojiKey);
+    // }
     return dataConvertArr.join(' ');
 }
 
