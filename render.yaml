@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: gcm-bot
+    runtime: node
+    plan: starter
+    start command: "npm start"
+    autoDeploy: true
