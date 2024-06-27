@@ -4,7 +4,7 @@ import { commandHandle } from './functions/handleCommands.js';
 import { eventHandle } from './functions/handleEvents.js';
 
 import logger from "./utils/log.js";
-let log = logger(import.meta.filename);
+const log = logger(import.meta.filename);
 
 const eventsPath = './src/events';
 //const functionsPath = './src/functions';

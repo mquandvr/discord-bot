@@ -2,7 +2,7 @@ import express from 'express';
 import * as dotenv from 'dotenv';
 
 import logger from "./src/utils/log.js";
-let log = logger(import.meta.filename);
+const log = logger(import.meta.filename);
 
 dotenv.config();
 const __dirname = import.meta.dirname;
