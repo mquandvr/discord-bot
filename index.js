@@ -8,7 +8,7 @@ dotenv.config();
 const __dirname = import.meta.dirname;
 
 //require('dotenv').config();
-var app = express();
+const app = express();
 //var path = require('path');
 
 //app.use(express.static(__dirname)); // Current directory is root
@@ -47,17 +47,17 @@ app.use('/healthz', (req, res) => {
     res.send('healthz');
 });
 
-app.use('/wakeup', (req, res) => {
-    const meta = require('./src/login');
-    meta.login();
-});
+// app.use('/wakeup', (req, res) => {
+//     const meta = require('./src/login');
+//     meta.login();
+// });
 
-app.use('/login', (req, res) => {
-    app._router
-    res.send('login success!');
-});
+// app.use('/login', (_, res) => {
+//     app._router
+//     res.send('login success!');
+// });
 
-app.use('/', (req, res) => {
+app.use('/', (_, res) => {
     res.send('hello world');
 });
 //app.use(express.static('/assets'));

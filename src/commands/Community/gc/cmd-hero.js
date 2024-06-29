@@ -1,9 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, formatEmoji, blockQuote, codeBlock } from 'discord.js';
-import fs from 'fs';
 import * as Table from '../../../utils/table.js';
 import { convertDateToTimetamp } from '../../../utils/date.js';
-import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_HERO, COLLECTION_GC_IMAGE, COLLECTION_GC_TIER } from '../../../utils/constants.js';
+import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_HERO, COLLECTION_GC_TIER } from '../../../utils/constants.js';
 
 import logger from "../../../utils/log.js";
 import ConnectionGC from '../../../db/databaseGC.js';
@@ -23,11 +22,11 @@ const data = new SlashCommandBuilder()
             .setAutocomplete(true)
     );
 
-const autocomplete = async (interaction, client) => {
+const autocomplete = async (interaction) => {
     try {
         const focusedValue = interaction.options.getFocused();
         const heros = await connection.setCollection(COLLECTION_GC_HERO).findAll();
-        log.info("heros %s", heros.length)
+        log.info("heros %s", heros.length);
         const fileterChoices = heros.filter((hero) =>
             hero.name?.toLowerCase()?.startsWith(focusedValue?.toLowerCase())
         );
@@ -35,7 +34,7 @@ const autocomplete = async (interaction, client) => {
             return {
                 name: choice.name,
                 value: choice.value ?? `v${index}`
-            }
+            };
         });
         await interaction.respond(results?.slice(0, 25));
     } catch (e) {
@@ -43,12 +42,16 @@ const autocomplete = async (interaction, client) => {
         const results = [{
             name: "Data not Found",
             value: `dt`
-        }]
+        }];
         await interaction.respond(results);
     }
-}
+};
 
-const execute = async (interaction, client) => {
+const validate = async () => {
+    return true;
+};
+
+const execute = async (interaction) => {
     try {
         const heroValue = interaction.options.getString('hero');
         log.info("hero %s", heroValue);
@@ -146,7 +149,7 @@ const execute = async (interaction, client) => {
             try {
                 const selectedId = i.customId;
                 log.info(`selected button: ${selectedId}`);
-                const collectorFilter = i => i.user.id === interaction.user.id;
+                const collectorFilter = (i) => i.user.id === interaction.user.id;
                 if (collectorFilter) {
                     if (selectedId === 'equipmentBtn') {
                         equipmentBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
@@ -166,20 +169,20 @@ const execute = async (interaction, client) => {
                 log.error(`Error selected button gc hero: ${e}`);
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
-        })
+        });
 
-        collector.on('end', async i => {
+        collector.on('end', async () => {
             try {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
                 log.error(`Error end button gc hero: ${e}`);
             }
-        })
+        });
 
     } catch (e) {
         log.error(`Error execute gc hero: ${e}`);
     }
-}
+};
 
 const createDataEmbeds = async (template) => {
     const embedArr = [];
@@ -199,7 +202,7 @@ const createDataEmbeds = async (template) => {
     }
 
     return embedArr;
-}
+};
 
 const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
     //let fileImage = new AttachmentBuilder(`./assets/${heroData.value}/${fileName}`);
@@ -224,7 +227,7 @@ const createEmbedTemplate = async (template, isLastRecord, isHeaderRecord) => {
             .setFooter({ text: 'Last updated' });
     }
     return equipEmbed.setColor('Random');
-}
+};
 
 const createContentTable = async (hero) => {
     // const tier = await findOne(COLLECTION_TIER, {hero: hero}, DATABASE_NAME_GRANDCHASE);
@@ -261,6 +264,6 @@ const createContentTable = async (hero) => {
     });
 
     return table.build();
-}
+};
 
-export { data, autocomplete, execute };
+export { data, validate, autocomplete, execute };

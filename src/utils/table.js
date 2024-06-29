@@ -1,5 +1,5 @@
 "use strict";
-//Object.defineProperty(exports, "__esModule", {value: true});
+// Object.defineProperty(exports, "__esModule", {value: true});
 import pad_1 from 'pad';
 const defaultOptions = {
     sortDirection: 'asc',
@@ -21,7 +21,7 @@ export class TableBuilder {
 
     build() {
         // Header
-        //let result = `\`${this._buildRow(this._createHeader())}\n`;
+        // let result = `\`${this._buildRow(this._createHeader())}\n`;
         let result = `${this._buildRow(this._createHeader())}\n`;
         result += pad_1('', this._totalWidth(), '―');
         // Content
@@ -31,7 +31,7 @@ export class TableBuilder {
         this._items.forEach((row, index) => {
             result += `\n${this._buildRow(row, index + 1)}`;
         });
-        //return `${result}\``;
+        // return `${result}\``;
         return `${result}`;
     }
 

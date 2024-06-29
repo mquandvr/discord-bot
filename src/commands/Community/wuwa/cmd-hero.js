@@ -42,7 +42,7 @@ const autocomplete = async (interaction) => {
             return {
                 name: choice.name,
                 value: choice.value ?? `v${index}`
-            }
+            };
         });
         await interaction.respond(results.slice(0, 25));
     } catch (e) {
@@ -50,12 +50,16 @@ const autocomplete = async (interaction) => {
         const results = [{
             name: "Data not Found",
             value: `dt`
-        }]
+        }];
         await interaction.respond(results);
     }
-}
+};
 
-const execute = async (interaction, client) => {
+const validate = async () => {
+    return true;
+};
+
+const execute = async (interaction) => {
     try {
         const heroValue = interaction.options.getString('hero');
         log.info("hero", heroValue);
@@ -114,13 +118,14 @@ const execute = async (interaction, client) => {
             dataEmbeb.title = imageData.content;
             dataEmbeb.imageName = imageData.data[0].image_name;
             return createDataEmbeds(dataEmbeb);
-        })
+        });
 
         const selectArr = fileImageData.map((imageData, index) => {
             return new StringSelectMenuOptionBuilder()
                 .setLabel(imageData.content)
                 .setValue(`${index + 1}`)
-                .setDefault(index === 0 ? true : false)});
+                .setDefault(index === 0 ? true : false);
+        });
 
         const selectRow = new StringSelectMenuBuilder()
             .setCustomId('starter')
@@ -139,7 +144,7 @@ const execute = async (interaction, client) => {
             try {
                 const selectedId = i.values[0];
 
-                row.components[0].options.map((option) => 
+                row.components[0].options.map((option) =>
                     option.data.value === selectedId ? option.setDefault(true) : option.setDefault(false)
                 );
 
@@ -149,21 +154,21 @@ const execute = async (interaction, client) => {
                 log.error(`Error select wuwa: ${e}`);
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
-        })
+        });
 
-        collector.on('end', async i => {
+        collector.on('end', async () => {
             try {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
                 log.error(`Error end select wuwa: ${e}`);
                 await interaction.deleteReply();
             }
-        })
+        });
 
     } catch (e) {
         log.error(`Error execute wuwa hero: ${e}`);
     }
-}
+};
 
 const createDataEmbeds = (dataEmbeb) => {
     let embedArr = [];
@@ -182,7 +187,7 @@ const createDataEmbeds = (dataEmbeb) => {
     }
 
     return embedArr;
-}
+};
 
 const createEmbedTemplate = (template, isLastRecord = true, isHeaderRecord = true) => {
     const equipEmbed = new EmbedBuilder();
@@ -203,6 +208,6 @@ const createEmbedTemplate = (template, isLastRecord = true, isHeaderRecord = tru
             .setFooter({ text: 'Last updated' });
     }
     return equipEmbed.setColor("Random");
-}
+};
 
-export { data, autocomplete, execute };
+export { data, validate, autocomplete, execute };

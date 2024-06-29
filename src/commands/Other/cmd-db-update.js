@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { retrieveData } from '../../utils/fetch.js';
 import logger from "../../utils/log.js";
-import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_HERO, COLLECTION_GC_IMAGE, COLLECTION_GC_META, COLLECTION_GC_TIER, COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_NEWS, COLLECTION_WUWE_WEAPON } from '../../utils/constants.js';
+import { COLLECTION_GC_ATTRIBUTE, COLLECTION_GC_CLASS, COLLECTION_GC_HERO, COLLECTION_GC_META, COLLECTION_GC_TIER, COLLECTION_WUWE_ATTRIBUTE, COLLECTION_WUWE_HERO, COLLECTION_WUWE_IMAGE, COLLECTION_WUWE_NEWS, COLLECTION_WUWE_WEAPON } from '../../utils/constants.js';
 import ConnectionGC from '../../db/databaseGC.js';
 import ConnectionWuwa from '../../db/databaseWuwa.js';
 const log = logger(import.meta.filename);
@@ -13,6 +13,10 @@ const connectionWuwa = new ConnectionWuwa();
 const data = new SlashCommandBuilder()
     .setName('db-update')
     .setDescription('Update Database Command!');
+
+const validate = async () => {
+    return true;
+};
 
 const execute = async (interaction) => {
     log.info("update meta");
@@ -31,7 +35,7 @@ const execute = async (interaction) => {
         log.error(`Error execute data: ${e}`);
     }
 
-}
+};
 
 async function updateDB(data) {
     try {
@@ -73,4 +77,4 @@ async function updateWuWaData(data) {
 }
 
 
-export { data, execute };
+export { data, validate, execute };

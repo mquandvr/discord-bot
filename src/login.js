@@ -23,10 +23,10 @@ const login = async () => {
         await eventHandle(client);
         client.handleEvents(eventFiles);
         client.handleCommands(commandFolders, commandFoldersPath);
-        await client.login(process.env.token)
+        await client.login(process.env.token);
     } catch (e) {
         log.error(e);
     }
-}
+};
 
 export { login, client };

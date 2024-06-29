@@ -30,7 +30,7 @@ const data = new SlashCommandBuilder()
             .setAutocomplete(true)
     );
 
-const autocomplete = async (interaction, client) => {
+const autocomplete = async (interaction) => {
     try {
         const focusedValue = interaction.options.getFocused();
         let fileterChoices = [];
@@ -73,13 +73,17 @@ const autocomplete = async (interaction, client) => {
         const results = [{
             name: "Data not Found",
             value: `v0`
-        }]
+        }];
         await interaction.respond(results);
     }
 
-}
+};
 
-const execute = async (interaction, client) => {
+const validate = async () => {
+    return true;
+};
+
+const execute = async (interaction) => {
     try {
         const contentValue = interaction.options.getString('content');
         const phaseValue = interaction.options.getString('phase');
@@ -127,7 +131,7 @@ const execute = async (interaction, client) => {
                 .setStyle(index === 0 ? ButtonStyle.Primary : ButtonStyle.Secondary)
                 .setDisabled(index === 0);
         });
-        const row = new ActionRowBuilder()
+        let row = new ActionRowBuilder()
             .addComponents(...components);
 
         if (numberOfPagination > 1) {
@@ -139,7 +143,7 @@ const execute = async (interaction, client) => {
             const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
             collector.on('collect', async i => {
                 try {
-                    const selectedId = i.customId
+                    const selectedId = i.customId;
                     const collectorFilter = i => i.user.id === interaction.user.id;
                     if (collectorFilter) {
                         const dataCurrentPage = Number.parseInt(MAX_RECORD_OF_PAGE) * (Number.parseInt(selectedId) - 1);
@@ -167,7 +171,7 @@ const execute = async (interaction, client) => {
                             const pagiX = new ButtonBuilder()
                                 .setCustomId(`${record}`)
                                 .setLabel(`${record}`)
-                                .setStyle(ButtonStyle.Secondary)
+                                .setStyle(ButtonStyle.Secondary);
 
                             if (record == selectedId) {
                                 pagiX.setStyle(ButtonStyle.Primary)
@@ -184,15 +188,15 @@ const execute = async (interaction, client) => {
                     log.error(e);
                     await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
                 }
-            })
+            });
 
-            collector.on('end', async i => {
+            collector.on('end', async () => {
                 try {
                     await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
                 } catch (e) {
-                    log.info(e);
+                    log.error(`Error end button gc meta: ${e}`);
                 }
-            })
+            });
         } else {
             await interaction.editReply({ content: content });
         }
@@ -200,7 +204,7 @@ const execute = async (interaction, client) => {
     } catch (e) {
         log.error(`Error execute gc meta: ${e}`);
     }
-}
+};
 
 const dataTemplate = (data, attributes, classes) => {
     const headerData = `${bold(data.name)} ${bold(dataSubTemplete(data.subName, attributes, classes))}`;
@@ -210,7 +214,7 @@ const dataTemplate = (data, attributes, classes) => {
     // })
     const dataKey = codeBlock(data.key ?? "Data not Found");
     return `${headerData} ${dataIcon} ${dataKey} \r`;
-}
+};
 
 const dataSubTemplete = (dataSub, attributes, classes) => {
     const dataSubArr = dataSub.split(',');
@@ -228,6 +232,6 @@ const dataSubTemplete = (dataSub, attributes, classes) => {
     //     dataConvertArr.push(emojiKey);
     // }
     return dataConvertArr.join(' ');
-}
+};
 
-export { data, autocomplete, execute };
+export { data, validate, autocomplete, execute };

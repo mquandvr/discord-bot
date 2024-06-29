@@ -12,4 +12,4 @@ export const eventHandle = async (client) => {
             }
         }
     };
-}
+};

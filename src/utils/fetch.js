@@ -9,6 +9,6 @@ const retrieveData = async (url) => {
     } catch (e) {
         log.error(`error fetch data: ${e}`);
     }
-}
+};
 
 export { retrieveData };

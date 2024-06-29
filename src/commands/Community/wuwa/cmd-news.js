@@ -27,57 +27,76 @@ const CONTENT_MAX_LENGTH = 2000;
 const data = new SlashCommandBuilder()
     .setName('ww-news')
     .setDescription('Wuthering News Command!')
-    .addStringOption(option =>
-        option.setName("date")
-            .setDescription("Set date News. Format: yyyyMMdd")
-            .setRequired(false)
+    .addSubcommand((subcommand) => subcommand
+        .setName('choose')
+        .setDescription('choose date and channel (optional)')
+        .addStringOption(option =>
+            option.setName("date")
+                .setDescription("Set date News. Format: yyyyMMdd")
+                .setRequired(false)
+        )
+        .addChannelOption(option =>
+            option.setName("channel")
+                .setDescription('The channel the message should be sent to.')
+                .addChannelTypes(ChannelType.GuildText)
+                .setRequired(false)
+        )
     )
-    .addChannelOption(option =>
-        option.setName("channel")
-            .setDescription('The channel the message should be sent to.')
-            .addChannelTypes(ChannelType.GuildText)
-            .setRequired(false)
-    )
-    .addBooleanOption(option =>
-        option.setName("schedule")
-            .setDescription("Enable the bot to send news on 1 time / 1 hour.")
-            .setRequired(false)
+    .addSubcommand((subcommand) => subcommand
+        .setName('schedule')
+        .setDescription('choose date and channel (optional)')
+        .addBooleanOption(option =>
+            option.setName("enable")
+                .setDescription("Enable the bot to send news on 1 time / 1 hour.")
+                .setRequired(true)
+        )
+        .addChannelOption(option =>
+            option.setName("channel")
+                .setDescription('The channel the message should be sent to.')
+                .addChannelTypes(ChannelType.GuildText)
+                .setRequired(false)
+        )
     );
 
-const execute = async (interaction, client) => {
-    try {
-        // const schedule = interaction.options.getChannel('schedule');
-        //await interaction.reply({ ephemeral: false, content: 'Waiting', fetchReply: true });
-
-        const isSchedule = interaction.options.getBoolean('schedule');
-        const channel = interaction.options.getChannel('channel') ?? interaction.channel;
-        const date = interaction.options.getString('date');
+const validate = async (interaction) => {
+    const subcommand = interaction.options.getSubcommand();
+    const date = interaction.options.getString('date');
+    if (subcommand === "choose") {
         if (date && !isNaN(new Date(date))) {
             log.info("Error format date");
             await interaction.editReply({ content: 'Wrong format date (yyyyMMdd)!.' });
-            return;
+            return false;
         }
+    }
+    return true;
+};
 
-        if (isSchedule) {
-            await createChannel(channel);
-            await interaction.editReply({ ephemeral: false, content: 'Schedule added!', fetchReply: true });
+const execute = async (interaction) => {
+    try {
+        // const schedule = interaction.options.getChannel('schedule');
+        //await interaction.reply({ ephemeral: false, content: 'Waiting', fetchReply: true });
+        const subcommand = interaction.options.getSubcommand();
+        const channel = interaction.options.getChannel('channel') ?? interaction.channel;
+
+        if (subcommand === "schedule") {
+            const enabled = interaction.options.getBoolean('enable');
+            await createChannel(interaction, channel, enabled);
+            const content = enabled ? 'Schedule added! Bot will check and post news updates every 1 hour/day.' : `Schedule of channel (${channel.name}) removed!`;
+            await interaction.editReply({ ephemeral: false, content: content, fetchReply: true });
         } else {
-            await retriveContent(channel, date);
+            const date = interaction.options.getString('date');
+            await retriveContent(channel, interaction.guild, date);
             await interaction.deleteReply();
         }
 
     } catch (e) {
         log.error(`Error execute wuwa news: ${e}`);
     }
-}
+};
 
-const autocomplete = async () => {
-
-}
-
-const createChannel = async (interaction, channel) => {
+const createChannel = async (interaction, channel, enabled) => {
     const query = { id: channel.id };
-    const data = { $set: { id: channel.id, name: channel.name, serverId: interaction.guild.id, serverName: interaction.guild.name } };
+    const data = { $set: { id: channel.id, name: channel.name, guild: { id: interaction.guild.id, name: interaction.guild.name }, enabled: enabled} };
     const options = { upsert: true };
     // await updateOneData(COLLECTION_WUWE_CHANNEL, DATABASE_NAME_WUWE, query, data, options);
     await connection
@@ -86,14 +105,14 @@ const createChannel = async (interaction, channel) => {
         .setOptions(options)
         .setCollection(COLLECTION_WUWE_CHANNEL)
         .updateOneData();
-}
+};
 
 const sendFooter = async (channel) => {
     await sleep(500);
     await channel.send({ content: '-----------------------' });
-}
+};
 
-const retriveContent = async (channel, date) => {
+const retriveContent = async (channel, guild, date) => {
     const dateTimetamp = convertYMDStrToTimetamp(date);
     const newDate = new Date(dateTimetamp);
     newDate.setHours(0, 0, 0, 0);
@@ -102,7 +121,7 @@ const retriveContent = async (channel, date) => {
     const urlArticle = process.env.url_wuwa_acticle;
     const responseArticle = await fetch(urlArticle);
     const dataArticles = await responseArticle.json();
-    // const dataPosted = await findByCondition(COLLECTION_WUWE_NEWS, {channelId: channel.id}, DATABASE_NAME_WUWE);
+    // const channelPost = await findByCondition(COLLECTION_WUWE_CHANNEL, {channelId: channel.id}, DATABASE_NAME_WUWE);
     const dataPosted = await connection
         .setQuery({ channelId: channel.id })
         .setCollection(COLLECTION_WUWE_NEWS)
@@ -136,6 +155,7 @@ const retriveContent = async (channel, date) => {
                 9. Add footer source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
                 10. Add header: ${dataArticleDetail?.articleTitle}.
                 11. When content have url with an extension image. Ext: jpg, gif, etc. Do not add that content.
+                12. Use markdown
                 Content: ${dataArticleDetail?.articleContent}`;
 
                 const result = await model.generateContent(prompt);
@@ -166,7 +186,7 @@ const retriveContent = async (channel, date) => {
                     .setCollection(COLLECTION_WUWE_NEWS)
                     .insertOneData();
 
-                log.info(`data ${dataArticleDetail?.articleId} sent to ${channel.name}`);
+                log.info(`data ${dataArticleDetail?.articleId} sent to server/channel ${guild.name}/${channel.name}`);
             }
         }
     } else {
@@ -176,4 +196,4 @@ const retriveContent = async (channel, date) => {
 
 let sleep = async (ms) => await new Promise(r => setTimeout(r, ms));
 
-export { data, autocomplete, execute, retriveContent };
+export { data, validate, execute, retriveContent };

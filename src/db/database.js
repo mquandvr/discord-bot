@@ -1,5 +1,4 @@
 import { MongoClient } from "mongodb";
-import { DATABASE_NAME_WUWE, DATABASE_NAME_GRANDCHASE } from "../utils/constants.js";
 
 import logger from "../utils/log.js";
 const log = logger(import.meta.filename);
