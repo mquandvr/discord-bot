@@ -2,7 +2,7 @@ import { REST } from "@discordjs/rest";
 import { Routes } from 'discord-api-types/v9';
 import logger from "../utils/log.js";
 import { getFilePaths } from "../utils/path.js";
-let log = logger(import.meta.filename);
+const log = logger(import.meta.filename);
 
 export const commandHandle = async (client) => {
     client.handleCommands = async (commandFoldersPath) => {
@@ -36,7 +36,7 @@ export const commandHandle = async (client) => {
 
                 log.info(`Successfully reloaded ${data.length} application (/) commands.`);
             } catch (error) {
-                log.error(error);
+                log.error(`Error load command: ${error}`);
             }
         })();
     };

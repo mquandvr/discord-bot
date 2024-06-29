@@ -234,4 +234,6 @@ const dataSubTemplete = (dataSub, attributes, classes) => {
     return dataConvertArr.join(' ');
 };
 
-export { data, validate, autocomplete, execute };
+const devOnly = false;
+
+export { data, validate, autocomplete, execute, devOnly };

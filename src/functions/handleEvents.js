@@ -5,9 +5,9 @@ export const eventHandle = async (client) => {
         const eventFiles = getFilePaths(eventsPath)
                             .filter(file => file.endsWith('.js'))
                             .map(file => file.replace('src', '..'));
-        for (const file of eventFiles) {
+        for (const filePath of eventFiles) {
             // const filePath = path.join(pathFile, file);
-            const filePath = `../events/${file}`;
+            // const filePath = `../events/${file}`;
             const eventFile = await import(filePath);
             const event = eventFile.default;
             if (event.once) {

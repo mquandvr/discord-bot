@@ -266,4 +266,6 @@ const createContentTable = async (hero) => {
     return table.build();
 };
 
-export { data, validate, autocomplete, execute };
+const devOnly = false;
+
+export { data, validate, autocomplete, execute, devOnly };

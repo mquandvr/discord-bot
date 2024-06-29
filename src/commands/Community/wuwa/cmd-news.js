@@ -194,6 +194,8 @@ const retriveContent = async (channel, guild, date) => {
     }
 };
 
-let sleep = async (ms) => await new Promise(r => setTimeout(r, ms));
+const sleep = async (ms) => await new Promise(r => setTimeout(r, ms));
 
-export { data, validate, execute, retriveContent };
+const devOnly = false;
+
+export { data, validate, execute, retriveContent, devOnly };

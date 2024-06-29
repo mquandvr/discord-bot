@@ -210,4 +210,6 @@ const createEmbedTemplate = (template, isLastRecord = true, isHeaderRecord = tru
     return equipEmbed.setColor("Random");
 };
 
-export { data, validate, autocomplete, execute };
+const devOnly = false;
+
+export { data, validate, autocomplete, execute, devOnly };

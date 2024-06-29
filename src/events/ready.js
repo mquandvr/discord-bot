@@ -1,6 +1,6 @@
 import { Events } from "discord.js";
 import logger from "../utils/log.js";
-let log = logger(import.meta.filename);
+const log = logger(import.meta.filename);
 
 export default {
     name: Events.ClientReady,
