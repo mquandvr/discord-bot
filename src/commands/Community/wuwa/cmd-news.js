@@ -64,7 +64,7 @@ const validate = async (interaction) => {
     if (subcommand === "choose") {
         if (date && !isNaN(new Date(date))) {
             log.info("Error format date");
-            await interaction.editReply({ content: 'Wrong format date (yyyyMMdd)!.' });
+            await interaction.editReply({ ephemeral: true, content: 'Wrong format date (yyyyMMdd)!.' });
             return false;
         }
     }
@@ -155,7 +155,7 @@ const retriveContent = async (channel, guild, date) => {
                 9. Add footer source link: https://wutheringwaves.kurogames.com/en/main/news/detail/${dataArticleDetail?.articleId}
                 10. Add header: ${dataArticleDetail?.articleTitle}.
                 11. When content have url with an extension image. Ext: jpg, gif, etc. Do not add that content.
-                12. Use markdown
+                12. Use markdown for content.
                 Content: ${dataArticleDetail?.articleContent}`;
 
                 const result = await model.generateContent(prompt);

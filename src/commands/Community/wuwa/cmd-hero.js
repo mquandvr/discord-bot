@@ -71,7 +71,7 @@ const execute = async (interaction) => {
             .findOne();
         // const heroData = heros.find(h => h.value === heroValue);
 
-        if (!heroValue || !heroData) return await interaction.editReply({ content: 'Hero not found!' });
+        if (!heroValue || !heroData) return await interaction.editReply({ ephemeral: true, content: 'Hero not found!' });
 
         // const fileImageData = await findAll(COLLECTION_WUWE_IMAGE, DATABASE_NAME_WUWE);
         const fileImageData = await connection
@@ -152,13 +152,13 @@ const execute = async (interaction) => {
                 await i.update({ embeds: embebArr[selectedId - 1], components: [row] });
             } catch (e) {
                 log.error(`Error select wuwa: ${e}`);
-                await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+                await interaction.editReply({ ephemeral: true, content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             }
         });
 
         collector.on('end', async () => {
             try {
-                await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+                await interaction.editReply({ ephemeral: true, content: 'Confirmation not received within 1 minute, cancelling', components: [] });
             } catch (e) {
                 log.error(`Error end select wuwa: ${e}`);
                 await interaction.deleteReply();

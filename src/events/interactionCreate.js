@@ -1,8 +1,9 @@
+import { Events } from "discord.js";
 import logger from "../utils/log.js";
 let log = logger(import.meta.filename);
 
 export default {
-    name: 'interactionCreate',
+    name: Events.InteractionCreate,
     async execute(interaction, client) {
         log.info("call interaction");
         if (interaction.isAutocomplete()) {
@@ -19,10 +20,7 @@ export default {
                 await command.autocomplete(interaction, client);
             } catch (error) {
                 log.error(error);
-                await interaction.reply({
-                    content: 'There was an error while executing this command!',
-                    ephemeral: true
-                });
+                await interaction.reply({content: 'There was an error while executing this command!', ephemeral: true });
             }
         }
 
@@ -30,6 +28,16 @@ export default {
             const command = client.commands.get(interaction.commandName);
 
             if (!command) return log.info('Command was not found');
+
+            if (command.devOnly) {
+                log.info(`User ${interaction.member.id} use command for developer`);
+                const developers = process.env.developers.split(',');
+                if (!developers.includes(interaction.member.id)) {
+                    await interaction.editReply({ ephemeral: true, content: 'This command is for developers only!' });
+                    log.warn(`User ${interaction.member.id} is not developer`);
+                    return;
+                }
+            }
 
             try {
                 log.info("run execute input command");

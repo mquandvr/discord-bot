@@ -9,7 +9,6 @@ const log = logger(import.meta.filename);
 const connectionGC = new ConnectionGC();
 const connectionWuwa = new ConnectionWuwa();
 
-
 const data = new SlashCommandBuilder()
     .setName('db-update')
     .setDescription('Update Database Command!');
@@ -76,5 +75,6 @@ async function updateWuWaData(data) {
     }
 }
 
+const devOnly = true;
 
-export { data, validate, execute };
+export { data, validate, execute, devOnly };

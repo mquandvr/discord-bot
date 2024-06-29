@@ -95,7 +95,7 @@ const execute = async (interaction) => {
             .findOne();
         // let metaData = metas?.find(h => h?.value === contentValue);
 
-        if (!contentValue || !metaData || !metaData.data) return await interaction.editReply({ content: 'Meta not found!' });
+        if (!contentValue || !metaData || !metaData.data) return await interaction.editReply({ ephemeral: true, content: 'Meta not found!' });
 
         let phaseDatas = metaData.data;
         if (phaseValue) {
@@ -186,13 +186,13 @@ const execute = async (interaction) => {
                     }
                 } catch (e) {
                     log.error(e);
-                    await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+                    await interaction.editReply({ ephemeral: true, content: 'Confirmation not received within 1 minute, cancelling', components: [] });
                 }
             });
 
             collector.on('end', async () => {
                 try {
-                    await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
+                    await interaction.editReply({ ephemeral: true, content: 'Confirmation not received within 1 minute, cancelling', components: [] });
                 } catch (e) {
                     log.error(`Error end button gc meta: ${e}`);
                 }
