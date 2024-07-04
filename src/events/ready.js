@@ -3,9 +3,9 @@ import logger from "../utils/log.js";
 const log = logger(import.meta.filename);
 
 export default {
-    name: Events.ClientReady,
-    once: true,
-    async execute(client) {
-        log.info(`Ready! Logged in as ${client.user.tag}`);
-    },
+  name: Events.ClientReady,
+  once: true,
+  async execute(client) {
+    log.info(`Ready! Logged in as ${client.user.tag}`);
+  },
 };

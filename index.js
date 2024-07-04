@@ -1,5 +1,5 @@
-import express from 'express';
-import * as dotenv from 'dotenv';
+import express from "express";
+import * as dotenv from "dotenv";
 
 import logger from "./src/utils/log.js";
 const log = logger(import.meta.filename);
@@ -12,7 +12,7 @@ const app = express();
 //var path = require('path');
 
 //app.use(express.static(__dirname)); // Current directory is root
-app.use('/media', express.static(__dirname + '/assets'));
+app.use("/media", express.static(__dirname + "/assets"));
 
 // app.use('/update-data', async (req, res) => {
 //     log.info("update data")
@@ -43,8 +43,8 @@ app.use('/media', express.static(__dirname + '/assets'));
 //     }
 // }
 
-app.use('/healthz', (req, res) => {
-    res.send('healthz');
+app.use("/healthz", (req, res) => {
+  res.send("healthz");
 });
 
 // app.use('/wakeup', (req, res) => {
@@ -57,13 +57,13 @@ app.use('/healthz', (req, res) => {
 //     res.send('login success!');
 // });
 
-app.use('/', (_, res) => {
-    res.send('hello world');
+app.use("/", (_, res) => {
+  res.send("hello world");
 });
 //app.use(express.static('/assets'));
 
 app.listen(80);
-log.info('Listening on port 80');
+log.info("Listening on port 80");
 
 // app = app.listen(80, function () {
 //     log.info('Listening :)');
@@ -77,11 +77,11 @@ log.info('Listening on port 80');
 // });
 
 (async () => {
-    const meta = await import('./src/login.js');
-    await meta.login();
+  const meta = await import("./src/login.js");
+  await meta.login();
 
-    // await retrieveDataMeta();
+  // await retrieveDataMeta();
 
-    const cron = await import('./src/cron/cron.js');
-    cron.default(meta.client);
+  const cron = await import("./src/cron/cron.js");
+  cron.default(meta.client);
 })();
