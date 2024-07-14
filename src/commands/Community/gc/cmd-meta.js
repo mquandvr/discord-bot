@@ -230,7 +230,8 @@ const execute = async (interaction) => {
 
       collector.on("end", async () => {
         try {
-          await interaction.update({
+          await interaction.editReply({
+            content: content,
             components: [],
           });
         } catch (e) {

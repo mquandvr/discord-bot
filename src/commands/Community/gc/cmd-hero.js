@@ -160,8 +160,9 @@ const execute = async (interaction) => {
     //await interaction.reply({ ephemeral: true, content: 'Loading...!' });
     //await channel.send({ embeds: embed, files: file });
     //await interaction.deleteReply();
+    let embed = equipEmbedArr;
     const response = await interaction.editReply({
-      embeds: equipEmbedArr,
+      embeds: embed,
       components: [row],
     });
     //const collectorFilter = i => i.user.id === interaction.user.id;
@@ -180,14 +181,13 @@ const execute = async (interaction) => {
           if (selectedId === "equipmentBtn") {
             equipmentBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
             siBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
-
-            await i.update({ embeds: equipEmbedArr, components: [row] });
+            embed = equipEmbedArr;
           } else if (selectedId === "siBtn") {
             equipmentBtn.setDisabled(false).setStyle(ButtonStyle.Secondary);
             siBtn.setDisabled(true).setStyle(ButtonStyle.Primary);
-
-            await i.update({ embeds: siEmbedArr, components: [row] });
+            embed = siEmbedArr;
           }
+          await i.update({ embeds: embed, components: [row] });
         } else {
           await i.update({ components: [] });
         }
@@ -203,7 +203,8 @@ const execute = async (interaction) => {
 
     collector.on("end", async () => {
       try {
-        await interaction.update({
+        await interaction.editReply({
+          embeds: embed,
           components: [],
         });
       } catch (e) {

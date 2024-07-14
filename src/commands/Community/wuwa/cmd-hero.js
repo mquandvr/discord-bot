@@ -155,9 +155,10 @@ const execute = async (interaction) => {
       .addOptions(...selectArr);
 
     const row = new ActionRowBuilder().addComponents(selectRow);
+    let embed = embebArr[0];
 
     const response = await interaction.editReply({
-      embeds: embebArr[0],
+      embeds: embed,
       components: [row],
     });
 
@@ -178,7 +179,8 @@ const execute = async (interaction) => {
         );
 
         // log.info(selectedId);
-        await i.update({ embeds: embebArr[selectedId - 1], components: [row] });
+        embed = embebArr[selectedId - 1];
+        await i.update({ embeds: embed, components: [row] });
       } catch (e) {
         log.error(`Error select wuwa: ${e}`);
         await interaction.editReply({
@@ -191,7 +193,8 @@ const execute = async (interaction) => {
 
     collector.on("end", async () => {
       try {
-        await interaction.update({
+        await interaction.editReply({
+          embeds: embed,
           components: [],
         });
       } catch (e) {
