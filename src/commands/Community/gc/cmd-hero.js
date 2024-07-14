@@ -201,11 +201,9 @@ const execute = async (interaction) => {
       }
     });
 
-    collector.on("end", async () => {
+    collector.on("end", async (i) => {
       try {
-        await interaction.editReply({
-          ephemeral: true,
-          content: "Confirmation not received within 1 minute, cancelling",
+        await i.update({
           components: [],
         });
       } catch (e) {
