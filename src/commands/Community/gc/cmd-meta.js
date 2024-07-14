@@ -152,7 +152,7 @@ const execute = async (interaction) => {
     //if (numberOfPagination > 1) {
     const components = [...Array(numberOfPagination)].map((_, index) => {
       return new ButtonBuilder()
-        .setCustomId(`id${index + 1}`)
+        .setCustomId(`${index + 1}`)
         .setLabel(`${index + 1}`)
         .setStyle(index === 0 ? ButtonStyle.Primary : ButtonStyle.Secondary)
         .setDisabled(index === 0);
