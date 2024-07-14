@@ -165,6 +165,7 @@ const execute = async (interaction) => {
     // const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
     const collector = response.createMessageComponentCollector({
       componentType: ComponentType.StringSelect,
+      time: 60_000,
     });
     collector.on("collect", async (i) => {
       try {

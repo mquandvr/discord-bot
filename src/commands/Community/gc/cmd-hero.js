@@ -80,11 +80,12 @@ const execute = async (interaction) => {
       .findOne();
     // const heroData = heros.find(h => h.value === heroValue);
 
-    if (!heroValue || !heroData)
+    if (!heroValue || !heroData) {
       return await interaction.editReply({
         ephemeral: true,
         content: "Hero not found!",
       });
+    }
 
     // let fileNames = [];
     // try {
@@ -168,6 +169,7 @@ const execute = async (interaction) => {
     //const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
     const collector = response.createMessageComponentCollector({
       componentType: ComponentType.Button,
+      time: 60_000,
     });
     collector.on("collect", async (i) => {
       try {
