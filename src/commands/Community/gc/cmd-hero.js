@@ -201,9 +201,9 @@ const execute = async (interaction) => {
       }
     });
 
-    collector.on("end", async (i) => {
+    collector.on("end", async () => {
       try {
-        await i.update({
+        await interaction.update({
           components: [],
         });
       } catch (e) {
