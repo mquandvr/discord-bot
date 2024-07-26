@@ -12,5 +12,10 @@ export const COLLECTION_WUWE_WEAPON = "weapon";
 export const COLLECTION_WUWE_IMAGE = "image";
 export const COLLECTION_WUWE_CHANNEL = "channel";
 
+export const COLLECTION_HSR_REDEEM = "redeem";
+export const COLLECTION_HSR_ACCOUNT = "account";
+export const COLLECTION_HSR_CHANNEL = "channel";
+
 export const DATABASE_NAME_GRANDCHASE = "grandchase";
 export const DATABASE_NAME_WUWE = "wuwe";
+export const DATABASE_NAME_HSR = "hsr";
