@@ -225,8 +225,8 @@ async function getHoyoCodes() {
     for (const code of avaliableCodes) {
       const rewards = code.icon_bonuses.map((i) => ({
         code: i.bonus_num,
-        // eslint-disable-next-line no-constant-binary-expression
         reward:
+          // eslint-disable-next-line no-constant-binary-expression
           `${i.bonus_num} ${pictureHash.find((j) => i.icon_url.includes(j.hash))?.name}` ??
           "Unknown",
       }));
