@@ -14,7 +14,7 @@ const connection = new ConnectionHSR();
 
 const data = new SlashCommandBuilder()
   .setName("hsr")
-  .setDescription("Wuthering News Command!")
+  .setDescription("Honkai Star Rail Command!")
   .addSubcommand((subcommand) =>
     subcommand
       .setName("add")
