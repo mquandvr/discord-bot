@@ -8,6 +8,7 @@ import got from "got";
 import {
   COLLECTION_HSR_ACCOUNT,
   COLLECTION_HSR_CHANNEL,
+  COLLECTION_HSR_CODE,
   COLLECTION_HSR_REDEEM,
 } from "../../../utils/constants.js";
 
@@ -149,29 +150,38 @@ const doRedeemCode = async (client, isSendCode) => {
       }
     }
 
-    // await connection
-    //   .setCollection(COLLECTION_HSR_REDEEM)
-    //   .setData(newCodes)
-    //   .insertManyData();
+    const codeDiscordSent = await connection
+      .setCollection(COLLECTION_HSR_CODE)
+      .findAll();
+    const codeSend =
+      newCodes.filter((i) => !codeDiscordSent.some((j) => i.code === j.code)) ??
+      [];
 
-    const baseUrl = "https://hsr.hoyoverse.com/gift";
-    const message = newCodes
-      .map(
-        (i) =>
-          `Code: ${i.code}\nRewards: ${i.rewards}\nClaim Here: ${baseUrl}?code=${i.code}`,
-      )
-      .join("\n\n");
-    log.info(`New code(s) found:\n${message}`);
+    if (codeSend.legnth > 0) {
+      const baseUrl = "https://hsr.hoyoverse.com/gift";
+      const message = codeSend
+        .map(
+          (i) =>
+            `Code: ${i.code}\nRewards: ${i.rewards}\nClaim Here: ${baseUrl}?code=${i.code}`,
+        )
+        .join("\n\n");
+      log.info(`New code(s) found:\n${message}`);
 
-    if (isSendCode) {
-      const channelRegs = await connection
-        .setCollection(COLLECTION_HSR_CHANNEL)
-        .setQuery({ enabled: true })
-        .findByCondition();
-      for (const chan of channelRegs) {
-        const channel = client.channels.cache.get(chan.id);
-        await channel.send({ content: message });
+      if (isSendCode) {
+        const channelRegs = await connection
+          .setCollection(COLLECTION_HSR_CHANNEL)
+          .setQuery({ enabled: true })
+          .findByCondition();
+        for (const chan of channelRegs) {
+          const channel = client.channels.cache.get(chan.id);
+          await channel.send({ content: message });
+        }
       }
+
+      await connection
+        .setData(codeSend)
+        .setCollection(COLLECTION_HSR_CODE)
+        .insertManyData();
     }
   } catch (e) {
     log.error(`Error execute schedule hsr codes: ${e}`);
