@@ -157,7 +157,7 @@ const doRedeemCode = async (client, isSendCode) => {
       newCodes.filter((i) => !codeDiscordSent.some((j) => i.code === j.code)) ??
       [];
 
-    if (codeSend.legnth > 0) {
+    if (codeSend.length > 0) {
       const baseUrl = "https://hsr.hoyoverse.com/gift";
       const message = codeSend
         .map(
