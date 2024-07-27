@@ -4,9 +4,6 @@ import logger from "../../../utils/log.js";
 const log = logger(import.meta.filename);
 
 import got from "got";
-import { load } from "cheerio";
-
-let codeList = [];
 
 import {
   COLLECTION_HSR_ACCOUNT,
@@ -48,35 +45,28 @@ const doRedeemCode = async (client, isSendCode) => {
       log.warn("No account found");
     }
 
-    const pageCodes = await getPageCodes();
+    const redeems = await connection
+      .setCollection(COLLECTION_HSR_REDEEM)
+      .findAll();
 
-    try {
-      const redeems = await connection
-        .setCollection(COLLECTION_HSR_REDEEM)
-        .setQuery({ status: "Active!" })
-        .findByCondition();
-
-      codeList = [...redeems];
-    } catch {
-      codeList = [...pageCodes];
-    }
+    const codes = await getCodeApi();
 
     const pendingCodes = await getHoyoCodes();
 
-    const newCodes = [];
+    const newCodes = [...codes];
     const hoyoCodes = pendingCodes.filter(
-      (i) => !codeList.some((j) => j.code === i.code),
+      (i) => !codes.some((j) => j.code === i.code),
     );
     if (hoyoCodes.length !== 0) {
       newCodes.push(...hoyoCodes);
     }
 
-    const webCodes = pageCodes.filter(
-      (i) => !codeList.some((j) => j.code === i.code),
-    );
-    if (webCodes.length !== 0) {
-      newCodes.push(...webCodes);
-    }
+    // const webCodes = pageCodes.filter(
+    //   (i) => !codeList.some((j) => j.code === i.code),
+    // );
+    // if (webCodes.length !== 0) {
+    //   newCodes.push(...webCodes);
+    // }
 
     if (newCodes.length === 0) {
       log.info("No code found");
@@ -84,58 +74,85 @@ const doRedeemCode = async (client, isSendCode) => {
     }
 
     for (const account of accounts) {
-      for (const code of newCodes) {
-        const res = await got({
-          url: process.env.url_hsr_hoyoverse_api,
-          searchParams: {
-            cdkey: code.code,
-            game_biz: "hkrpg_global",
-            lang: "en",
-            region: account.region,
-            t: Date.now(),
+      const redeemedCode = redeems.find((r) => r.uid === account.uid) ?? [];
+      const avaliableCodes = newCodes.filter(
+        (i) => !redeemedCode.codes?.includes(i.code),
+      );
+      if (avaliableCodes && avaliableCodes.length > 0) {
+        for (const code of avaliableCodes) {
+          const res = await got({
+            url: process.env.url_hsr_hoyoverse_api,
+            searchParams: {
+              cdkey: code.code,
+              game_biz: "hkrpg_global",
+              lang: "en",
+              region: account.region,
+              t: Date.now(),
+              uid: account.uid,
+            },
+            headers: {
+              "x-rpc-app_version": "2.42.0",
+              "x-rpc-client_type": 4,
+              Cookie: account.cookie,
+            },
+          });
+
+          if (res.statusCode !== 200) {
+            log.error(
+              `Error while redeeming code. uid: ${account.uid} - code: ${code.code} - status: ${res.statusCode} - message: ${res.body}`,
+            );
+
+            await new Promise((r) => setTimeout(r, 5000));
+            continue;
+          }
+
+          const codeBody = JSON.parse(res.body);
+
+          if (codeBody.retcode !== 0) {
+            log.warn(
+              `uid: ${account.uid} - code: ${code.code} - error: ${codeBody.message}`,
+            );
+
+            await new Promise((r) => setTimeout(r, 5000));
+            continue;
+          }
+
+          log.info(
+            `uid: ${account.uid} - code: ${code.code} - message: ${codeBody.message}`,
+          );
+
+          code.status = "Expired";
+
+          await new Promise((r) => setTimeout(r, 5000));
+        }
+
+        if (!redeemedCode.codes) {
+          redeemedCode.codes = [...avaliableCodes];
+        } else {
+          redeemedCode.codes.push(...avaliableCodes);
+        }
+        const data = {
+          $set: {
             uid: account.uid,
+            codes: redeemedCode.codes.map((x) => x.code),
           },
-          headers: {
-            "x-rpc-app_version": "2.42.0",
-            "x-rpc-client_type": 4,
-            Cookie: account.cookie,
-          },
-        });
-
-        if (res.statusCode !== 200) {
-          log.error(
-            `Error while redeeming code. uid: ${account.uid} - code: ${code.code} - status: ${res.statusCode} - message: ${res.body}`,
-          );
-
-          await new Promise((r) => setTimeout(r, 5000));
-          continue;
-        }
-
-        const codeBody = JSON.parse(res.body);
-
-        if (codeBody.retcode !== 0) {
-          log.warn(
-            `uid: ${account.uid} - code: ${code.code} - error: ${codeBody.message}`,
-          );
-
-          await new Promise((r) => setTimeout(r, 5000));
-          continue;
-        }
-
-        log.info(
-          `uid: ${account.uid} - code: ${code.code} - message: ${codeBody.message}`,
-        );
-
-        code.status = "Expired";
-
-        await new Promise((r) => setTimeout(r, 5000));
+        };
+        const options = { upsert: true };
+        await connection
+          .setCollection(COLLECTION_HSR_REDEEM)
+          .setQuery({ uid: account.uid })
+          .setData(data)
+          .setOptions(options)
+          .updateOneData();
+      } else {
+        log.warn(`uid: ${account.uid} - message: No new code`);
       }
     }
 
-    await connection
-      .setCollection(COLLECTION_HSR_REDEEM)
-      .setData(newCodes)
-      .insertManyData();
+    // await connection
+    //   .setCollection(COLLECTION_HSR_REDEEM)
+    //   .setData(newCodes)
+    //   .insertManyData();
 
     const baseUrl = "https://hsr.hoyoverse.com/gift";
     const message = newCodes
@@ -153,7 +170,7 @@ const doRedeemCode = async (client, isSendCode) => {
         .findByCondition();
       for (const chan of channelRegs) {
         const channel = client.channels.cache.get(chan.id);
-        await channel.send({ content: message });
+        // await channel.send({ content: message });
       }
     }
   } catch (e) {
@@ -161,33 +178,41 @@ const doRedeemCode = async (client, isSendCode) => {
   }
 };
 
-async function getPageCodes() {
-  const content = await got({
-    url: process.env.url_hsr_3rd_page_code,
-    responseType: "text",
-  });
+// async function getPageCodes() {
+//   const content = await got({
+//     url: process.env.url_hsr_3rd_page_code,
+//     responseType: "text",
+//   });
 
-  const $ = load(content.body);
-  const $codes = $("table");
-  let pageCodes = [];
-  $codes.find("tr").each((i, row) => {
-    if (i !== 0) {
-      // Initialize an empty object to store the row data
-      const rowData = {};
-      const status = $(row).find("td:nth-child(3)").text();
+//   const $ = load(content.body);
+//   const $codes = $("table");
+//   let pageCodes = [];
+//   $codes.find("tr").each((i, row) => {
+//     if (i !== 0) {
+//       // Initialize an empty object to store the row data
+//       const rowData = {};
+//       const status = $(row).find("td:nth-child(3)").text();
 
-      if (status.indexOf("Active") >= 0) {
-        rowData["code"] = $(row).find("td").first().text();
-        rowData["rewards"] = $(row).find("td:nth-child(2)").text();
-        rowData["status"] = status;
+//       if (status.indexOf("Active") >= 0) {
+//         rowData["code"] = $(row).find("td").first().text();
+//         rowData["rewards"] = $(row).find("td:nth-child(2)").text();
+//         rowData["status"] = status;
 
-        // Add the row data to the table data array
-        pageCodes.push(rowData);
-      }
-    }
-  });
+//         // Add the row data to the table data array
+//         pageCodes.push(rowData);
+//       }
+//     }
+//   });
 
-  return pageCodes;
+//   return pageCodes;
+// }
+
+async function getCodeApi() {
+  const urlCodes = process.env.url_hsr_code_api;
+  const responseCodes = await fetch(urlCodes);
+  const data = await responseCodes.json();
+
+  return data.active ?? [];
 }
 
 async function getHoyoCodes() {

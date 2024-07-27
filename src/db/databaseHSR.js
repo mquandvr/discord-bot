@@ -4,7 +4,7 @@ import Connections from "./database.js";
 class ConnectionHSR extends Connections {
   constructor() {
     super();
-    this.database = this.client.db(DATABASE_NAME_HSR);
+    this.setDataBase(this.getClient().db(DATABASE_NAME_HSR));
   }
 }
 

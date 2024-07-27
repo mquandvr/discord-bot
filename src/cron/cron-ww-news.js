@@ -8,6 +8,7 @@ const log = logger(import.meta.filename);
 const connection = new ConnectionWuwa();
 
 const createScheduleWWNews = async (client) => {
+  log.info("jobs createScheduleWWNews actived");
   // run 1 time / 1 hour
   schedule.scheduleJob("0 */1 * * *", async () => {
     try {

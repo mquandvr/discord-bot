@@ -4,7 +4,7 @@ import Connections from "./database.js";
 class ConnectionGC extends Connections {
   constructor() {
     super();
-    this.database = this.client.db(DATABASE_NAME_GRANDCHASE);
+    this.setDataBase(this.getClient().db(DATABASE_NAME_GRANDCHASE));
   }
 }
 
