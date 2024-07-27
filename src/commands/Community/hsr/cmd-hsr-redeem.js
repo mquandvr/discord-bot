@@ -170,7 +170,7 @@ const doRedeemCode = async (client, isSendCode) => {
         .findByCondition();
       for (const chan of channelRegs) {
         const channel = client.channels.cache.get(chan.id);
-        // await channel.send({ content: message });
+        await channel.send({ content: message });
       }
     }
   } catch (e) {
