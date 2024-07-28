@@ -1,17 +1,25 @@
 # discord-bot
 
-![Alt](https://repobeats.axiom.co/api/embed/7c5ea2f2b8f4d9db4b249cd4b7fe09778e962aea.svg "Repobeats analytics image")
-
 # Features
 1. GrandChase
     - Commands
       - [x] `/gc-hero` : Get character build (Gear / Soul Imprint).
+      
+        <img src="https://github.com/mquandvr/discord-bot/blob/main/assets/gc-image.png" alt="" width="250"/>
+            
       - [x] `/gc-meta` : Get the team key for the content.
+                 
+        <img src="https://github.com/mquandvr/discord-bot/blob/main/assets/gc-image-2.png" alt="" width="500"/>
 
-2. Wuthering Waves
+3. Wuthering Waves
     - Commands
       - [x] `/ww-hero` : Get character build.
+                 
+        <img src="https://github.com/mquandvr/discord-bot/blob/main/assets/ww-image.png" alt="" width="250"/>
+        
       - [x] `/ww-news` : Select the channel to get alerts on.
+                 
+        <img src="https://github.com/mquandvr/discord-bot/blob/main/assets/ww-image-2.png" alt="" width="500"/>
 
 4. Honkai Star Rail
     - Code Redeem
